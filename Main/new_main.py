@@ -5,6 +5,7 @@
 # imports
 import tkinter as tk
 from pathlib import Path
+import sqlite3 as sql
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
@@ -12,6 +13,36 @@ ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
+
+
+def create_connection(db_file):
+    """ Create the connection to the database. """
+    conn = None
+
+    try:
+        conn = sql.connect(db_file)
+    except sql.Error as e:
+        print(e)
+
+    return conn
+
+
+def select_by_barcode(barcode):
+    """ Sort by barcode. """
+
+    conn = create_connection(relative_to_assets("currentcrops.db"))
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"""
+        SELECT * FROM currentcrop WHERE "Barcode ID" = '{barcode}'
+        """
+    )
+    result = cursor.fetchall()
+
+    for i in result:
+        print(i)
 
 
 class FindMenu:
@@ -171,102 +202,152 @@ class FindMenu:
             font=("Roboto Bold", 24 * -1)
         )
 
-        self.canvas.create_rectangle(
-            459.0,
-            134.0,
-            952.0,
-            199.0,
-            fill="#C4C4C4",
-            outline="")
+        # Creating labels
 
-        self.canvas.create_rectangle(
-            202.0,
-            260.0,
-            459.0,
-            300.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_barcode = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_barcode.place(
+            x=459,
+            y=134,
+            width=493,
+            height=65
+        )
 
-        self.canvas.create_rectangle(
-            202.0,
-            341.0,
-            459.0,
-            381.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_variety_id = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_variety_id.place(
+            x=202,
+            y=260,
+            width=257,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            666.0,
-            341.0,
-            921.0,
-            381.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_variety_name = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_variety_name.place(
+            x=666,
+            y=260,
+            width=255,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            139.0,
-            422.0,
-            459.0,
-            462.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_location = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_location.place(
+            x=202,
+            y=341,
+            width=257,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            665.0,
-            422.0,
-            921.0,
-            462.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_crop = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_crop.place(
+            x=666,
+            y=341,
+            width=255,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            666.0,
-            503.0,
-            921.0,
-            543.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_source = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_source.place(
+            x=139,
+            y=422,
+            width=320,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            202.0,
-            503.0,
-            459.0,
-            543.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_year = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_year.place(
+            x=665,
+            y=422,
+            width=256,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            666.0,
-            760.0,
-            921.0,
-            800.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_quantity = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_quantity.place(
+            x=202,
+            y=503,
+            width=257,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            575.0,
-            695.0,
-            921.0,
-            735.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_germ = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_germ.place(
+            x=666,
+            y=503,
+            width=255,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            202.0,
-            584.0,
-            459.0,
-            624.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_tkw = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_tkw.place(
+            x=202,
+            y=584,
+            width=257,
+            height=40
+        )
 
-        self.canvas.create_rectangle(
-            162.0,
-            859.0,
-            861.0,
-            984.0,
-            fill="#C4C4C4",
-            outline="")
+        self.lbl_designation = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_designation.place(
+            x=575,
+            y=695,
+            width=346,
+            height=40
+        )
 
+        self.lbl_entrant = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_entrant.place(
+            x=666,
+            y=760,
+            width=255,
+            height=40
+        )
+
+        self.lbl_notes = tk.Label(
+            text="",
+            relief="raised"
+        )
+        self.lbl_notes.place(
+            x=162,
+            y=859,
+            width=699,
+            height=125
+        )
+
+        # Scan button
         self.button_image_1 = tk.PhotoImage(
             file=relative_to_assets("scan.png"))
         self.but_scan = tk.Button(
@@ -283,14 +364,7 @@ class FindMenu:
             height=65.0
         )
 
-        self.canvas.create_rectangle(
-            666.0,
-            260.0,
-            921.0,
-            300.0,
-            fill="#C4C4C4",
-            outline="")
-
+        # New entry button
         self.button_image_2 = tk.PhotoImage(
             file=relative_to_assets("new_entry.png"))
         self.but_new_entry = tk.Button(
@@ -307,6 +381,7 @@ class FindMenu:
             height=65.0
         )
 
+        # Edit quantity button
         self.button_image_3 = tk.PhotoImage(
             file=relative_to_assets("edit_quant.png"))
         self.but_edit_quant = tk.Button(
@@ -323,6 +398,7 @@ class FindMenu:
             height=42.0
         )
 
+        # Inventory button
         self.button_image_4 = tk.PhotoImage(
             file=relative_to_assets("inventory.png"))
         self.but_inventory = tk.Button(
@@ -339,6 +415,7 @@ class FindMenu:
             height=52
         )
 
+        # Horizontal seperator
         self.canvas.create_rectangle(
             0.0,
             656.0,
@@ -355,4 +432,5 @@ def main():
 
 
 if __name__ == "__main__":
+    select_by_barcode("10263-SAF-010-SI")
     main()
