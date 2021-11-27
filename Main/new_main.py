@@ -30,6 +30,8 @@ def create_connection(db_file):
 def select_by_barcode(barcode):
     """ Sort by barcode. """
 
+    list = []
+
     conn = create_connection(relative_to_assets("currentcrops.db"))
 
     cursor = conn.cursor()
@@ -42,7 +44,13 @@ def select_by_barcode(barcode):
     result = cursor.fetchall()
 
     for i in result:
-        print(i)
+        list.append(i)
+
+    return list
+
+
+def show_results():
+    """ Show the results on the main menu. """
 
 
 class FindMenu:
@@ -432,5 +440,4 @@ def main():
 
 
 if __name__ == "__main__":
-    select_by_barcode("10263-SAF-010-SI")
     main()
