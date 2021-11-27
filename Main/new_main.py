@@ -44,16 +44,10 @@ def select_by_barcode(barcode):
     result = cursor.fetchall()
 
     for i in result:
-        list.append(i)
-
-    return list
+        return i
 
 
-def show_results():
-    """ Show the results on the main menu. """
-
-
-class FindMenu:
+class MainMenu:
     """ Find menu class. """
 
     def __init__(self, master):
@@ -63,6 +57,22 @@ class FindMenu:
         master.configure(bg="#FFFFFF")
         master.title("NDSU Seed Archive")
         master.resizable(False, False)
+
+        # Setting up StringVar variables for updating labels
+
+        self.text_barcode = tk.StringVar()
+        self.text_variety_id = tk.StringVar()
+        self.text_variety_name = tk.StringVar()
+        self.text_location = tk.StringVar()
+        self.text_crop = tk.StringVar()
+        self.text_source = tk.StringVar()
+        self.text_year = tk.StringVar()
+        self.text_quantity = tk.StringVar()
+        self.text_germ = tk.StringVar()
+        self.text_tkw = tk.StringVar()
+        self.text_designation = tk.StringVar()
+        self.text_entrant = tk.StringVar()
+        self.text_notes = tk.StringVar()
 
         # Placing assets
 
@@ -212,9 +222,24 @@ class FindMenu:
 
         # Creating labels
 
+        self.text_barcode.set(self.show_results(0))
+        self.text_variety_id.set(self.show_results(1))
+        self.text_variety_name.set(self.show_results(2))
+        self.text_crop.set(self.show_results(3))
+        self.text_source.set(self.show_results(4))
+        self.text_year.set(self.show_results(5))
+        self.text_quantity.set(self.show_results(6))
+        self.text_germ.set(self.show_results(7))
+        self.text_tkw.set(self.show_results(8))
+        self.text_location.set(self.show_results(9))
+        self.text_designation.set(self.show_results(10))
+        self.text_entrant.set(self.show_results(11))
+        self.text_notes.set(self.show_results(12))
+
         self.lbl_barcode = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_barcode,
+            relief="raised",
+            font=(None, 24)
         )
         self.lbl_barcode.place(
             x=459,
@@ -224,8 +249,9 @@ class FindMenu:
         )
 
         self.lbl_variety_id = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_variety_id,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_variety_id.place(
             x=202,
@@ -235,8 +261,9 @@ class FindMenu:
         )
 
         self.lbl_variety_name = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_variety_name,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_variety_name.place(
             x=666,
@@ -246,8 +273,9 @@ class FindMenu:
         )
 
         self.lbl_location = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_location,
+            relief="raised",
+            font=(None, 16)
         )
         self.lbl_location.place(
             x=202,
@@ -257,8 +285,9 @@ class FindMenu:
         )
 
         self.lbl_crop = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_crop,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_crop.place(
             x=666,
@@ -268,8 +297,9 @@ class FindMenu:
         )
 
         self.lbl_source = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_source,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_source.place(
             x=139,
@@ -279,8 +309,9 @@ class FindMenu:
         )
 
         self.lbl_year = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_year,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_year.place(
             x=665,
@@ -290,8 +321,9 @@ class FindMenu:
         )
 
         self.lbl_quantity = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_quantity,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_quantity.place(
             x=202,
@@ -301,8 +333,9 @@ class FindMenu:
         )
 
         self.lbl_germ = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_germ,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_germ.place(
             x=666,
@@ -312,8 +345,9 @@ class FindMenu:
         )
 
         self.lbl_tkw = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_tkw,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_tkw.place(
             x=202,
@@ -323,8 +357,9 @@ class FindMenu:
         )
 
         self.lbl_designation = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_designation,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_designation.place(
             x=575,
@@ -334,8 +369,9 @@ class FindMenu:
         )
 
         self.lbl_entrant = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_entrant,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_entrant.place(
             x=666,
@@ -345,8 +381,9 @@ class FindMenu:
         )
 
         self.lbl_notes = tk.Label(
-            text="",
-            relief="raised"
+            textvariable=self.text_notes,
+            relief="raised",
+            font=(None, 18)
         )
         self.lbl_notes.place(
             x=162,
@@ -432,10 +469,17 @@ class FindMenu:
             fill="#868686",
             outline="")
 
+    def show_results(self, label_num):
+        list = select_by_barcode("11409-SOYrr-SI-019")
+        if list[label_num] is None:
+            return "NA"
+        else:
+            return list[label_num]
+
 
 def main():
     root = tk.Tk()
-    app = FindMenu(root)
+    app = MainMenu(root)
     root.mainloop()
 
 

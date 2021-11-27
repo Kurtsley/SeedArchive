@@ -1,8 +1,2 @@
-list = []
-
-list.append("hi")
-list.append("does")
-list.append("this")
-list.append("work")
-
+list = ("hi", "does", "THIS", "work", "nope")
 print(list[2])
