@@ -30,8 +30,6 @@ def create_connection(db_file):
 def select_by_barcode(barcode):
     """ Sort by barcode. """
 
-    list = []
-
     conn = create_connection(relative_to_assets("currentcrops.db"))
 
     cursor = conn.cursor()
