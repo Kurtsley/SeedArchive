@@ -72,6 +72,20 @@ class MainMenu:
         self.text_entrant = tk.StringVar()
         self.text_notes = tk.StringVar()
 
+        self.text_barcode.set(self.show_results(0))
+        self.text_variety_id.set(self.show_results(1))
+        self.text_variety_name.set(self.show_results(2))
+        self.text_crop.set(self.show_results(3))
+        self.text_source.set(self.show_results(4))
+        self.text_year.set(self.show_results(5))
+        self.text_quantity.set(self.show_results(6))
+        self.text_germ.set(self.show_results(7))
+        self.text_tkw.set(self.show_results(8))
+        self.text_location.set(self.show_results(9))
+        self.text_designation.set(self.show_results(10))
+        self.text_entrant.set(self.show_results(11))
+        self.text_notes.set(self.show_results(12))
+
         # Placing assets
 
         self.canvas = tk.Canvas(
@@ -220,24 +234,11 @@ class MainMenu:
 
         # Creating labels
 
-        self.text_barcode.set(self.show_results(0))
-        self.text_variety_id.set(self.show_results(1))
-        self.text_variety_name.set(self.show_results(2))
-        self.text_crop.set(self.show_results(3))
-        self.text_source.set(self.show_results(4))
-        self.text_year.set(self.show_results(5))
-        self.text_quantity.set(self.show_results(6))
-        self.text_germ.set(self.show_results(7))
-        self.text_tkw.set(self.show_results(8))
-        self.text_location.set(self.show_results(9))
-        self.text_designation.set(self.show_results(10))
-        self.text_entrant.set(self.show_results(11))
-        self.text_notes.set(self.show_results(12))
-
-        self.lbl_barcode = tk.Label(
+        self.lbl_barcode = tk.Entry(
             textvariable=self.text_barcode,
             relief="raised",
-            font=(None, 24)
+            font=(None, 24),
+            justify='center'
         )
         self.lbl_barcode.place(
             x=459,
@@ -468,6 +469,7 @@ class MainMenu:
             outline="")
 
     def show_results(self, label_num):
+        """ Show results in the main menu labels. """
         list = select_by_barcode("11409-SOYrr-SI-019")
         if list[label_num] is None:
             return "NA"
