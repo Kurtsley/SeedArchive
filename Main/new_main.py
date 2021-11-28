@@ -3,6 +3,7 @@
 # Find menu class file.
 
 # imports
+from os import popen
 import tkinter as tk
 from pathlib import Path
 import sqlite3 as sql
@@ -13,6 +14,12 @@ ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
+
+
+# Global database variables
+currentdb = relative_to_assets("currentcrops.db")
+archivedb = relative_to_assets("archivecrops.db")
+barcodedb = relative_to_assets("barcodes.db")
 
 
 def create_connection(db_file):
@@ -27,10 +34,10 @@ def create_connection(db_file):
     return conn
 
 
-def select_by_barcode(barcode):
+def select_by_barcode(barcode=None):
     """ Sort by barcode. """
 
-    conn = create_connection(relative_to_assets("currentcrops.db"))
+    conn = create_connection(relative_to_assets(currentdb))
 
     cursor = conn.cursor()
 
@@ -44,8 +51,23 @@ def select_by_barcode(barcode):
     for i in result:
         return i
 
+    def show_results(self, label_num):
+        """ Show results in the main menu labels. """
+        if select_by_barcode():
+            list = select_by_barcode()
+            if list[label_num] is None:
+                return "NA"
+            else:
+                return list[label_num]
+        else:
+            return "  "
 
-class MainMenu:
+    def get_barcode(self):
+        """ Return the barcode input when the scan button is pressed (for now). """
+        self.input = self.lbl_barcode.get()
+
+
+class MainMenu(tk.Tk):
     """ Find menu class. """
 
     def __init__(self, master):
@@ -71,20 +93,6 @@ class MainMenu:
         self.text_designation = tk.StringVar()
         self.text_entrant = tk.StringVar()
         self.text_notes = tk.StringVar()
-
-        self.text_barcode.set(self.show_results(0))
-        self.text_variety_id.set(self.show_results(1))
-        self.text_variety_name.set(self.show_results(2))
-        self.text_crop.set(self.show_results(3))
-        self.text_source.set(self.show_results(4))
-        self.text_year.set(self.show_results(5))
-        self.text_quantity.set(self.show_results(6))
-        self.text_germ.set(self.show_results(7))
-        self.text_tkw.set(self.show_results(8))
-        self.text_location.set(self.show_results(9))
-        self.text_designation.set(self.show_results(10))
-        self.text_entrant.set(self.show_results(11))
-        self.text_notes.set(self.show_results(12))
 
         # Placing assets
 
@@ -398,7 +406,7 @@ class MainMenu:
             image=self.button_image_1,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("button_1 clicked"),
+            command=self.create_popup,
             relief="flat"
         )
         self.but_scan.place(
@@ -468,13 +476,22 @@ class MainMenu:
             fill="#868686",
             outline="")
 
-    def show_results(self, label_num):
-        """ Show results in the main menu labels. """
-        list = select_by_barcode("11409-SOYrr-SI-019")
-        if list[label_num] is None:
-            return "NA"
-        else:
-            return list[label_num]
+        def update_results(self):
+            """ Updates the labels. """
+            self.text_variety_id.set(self.show_results(1))
+            self.text_variety_name.set(self.show_results(2))
+            self.text_crop.set(self.show_results(3))
+            self.text_source.set(self.show_results(4))
+            self.text_year.set(self.show_results(5))
+            self.text_quantity.set(self.show_results(6))
+            self.text_germ.set(self.show_results(7))
+            self.text_tkw.set(self.show_results(8))
+            self.text_location.set(self.show_results(9))
+            self.text_designation.set(self.show_results(10))
+            self.text_entrant.set(self.show_results(11))
+            self.text_notes.set(self.show_results(12))
+
+        # Define the actions of the program within the mainloop
 
 
 def main():
