@@ -3,9 +3,12 @@
 # Find menu class file.
 
 # imports
+from sqlite3.dbapi2 import Error
 import tkinter as tk
+from tkinter import messagebox
 from pathlib import Path
 import sqlite3 as sql
+import os
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
@@ -13,6 +16,12 @@ ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
+
+
+# Global database variables
+currentdb = relative_to_assets("currentcrops.db")
+archivedb = relative_to_assets("archivecrops.db")
+barcodedb = relative_to_assets("barcodes.db")
 
 
 def create_connection(db_file):
@@ -30,9 +39,7 @@ def create_connection(db_file):
 def select_by_barcode(barcode):
     """ Sort by barcode. """
 
-    list = []
-
-    conn = create_connection(relative_to_assets("currentcrops.db"))
+    conn = create_connection(relative_to_assets(currentdb))
 
     cursor = conn.cursor()
 
@@ -47,13 +54,28 @@ def select_by_barcode(barcode):
         return i
 
 
+def update_quantity(value, barcode):
+    """ Updates the quantity in the database. """
+    conn = create_connection(relative_to_assets(currentdb))
+
+    cursor = conn.cursor()
+
+    sql = f"""
+        UPDATE currentcrop SET "Quantity (g)" = {value}
+        WHERE "Barcode ID" = '{barcode}'
+    """
+
+    cursor.execute(sql)
+
+    conn.commit()
+
+
 class MainMenu:
     """ Find menu class. """
 
     def __init__(self, master):
         self.master = master
 
-        master.geometry("1024x1024")
         master.configure(bg="#FFFFFF")
         master.title("NDSU Seed Archive")
         master.resizable(False, False)
@@ -67,7 +89,7 @@ class MainMenu:
         self.text_crop = tk.StringVar()
         self.text_source = tk.StringVar()
         self.text_year = tk.StringVar()
-        self.text_quantity = tk.StringVar()
+        self.text_quantity = tk.IntVar()
         self.text_germ = tk.StringVar()
         self.text_tkw = tk.StringVar()
         self.text_designation = tk.StringVar()
@@ -222,24 +244,28 @@ class MainMenu:
 
         # Creating labels
 
-        self.text_barcode.set(self.show_results(0))
-        self.text_variety_id.set(self.show_results(1))
-        self.text_variety_name.set(self.show_results(2))
-        self.text_crop.set(self.show_results(3))
-        self.text_source.set(self.show_results(4))
-        self.text_year.set(self.show_results(5))
-        self.text_quantity.set(self.show_results(6))
-        self.text_germ.set(self.show_results(7))
-        self.text_tkw.set(self.show_results(8))
-        self.text_location.set(self.show_results(9))
-        self.text_designation.set(self.show_results(10))
-        self.text_entrant.set(self.show_results(11))
-        self.text_notes.set(self.show_results(12))
+        def update_labels():
+            self.text_barcode.set(self.show_results(0))
+            self.text_variety_id.set(self.show_results(1))
+            self.text_variety_name.set(
+                self.show_results(2))
+            self.text_crop.set(self.show_results(3))
+            self.text_source.set(self.show_results(4))
+            self.text_year.set(self.show_results(5))
+            self.text_quantity.set(round(self.show_results(6), ndigits=2))
+            self.text_germ.set(self.show_results(7))
+            self.text_tkw.set(self.show_results(8))
+            self.text_location.set(self.show_results(9))
+            self.text_designation.set(
+                self.show_results(10))
+            self.text_entrant.set(self.show_results(11))
+            self.text_notes.set(self.show_results(12))
 
-        self.lbl_barcode = tk.Label(
+        self.lbl_barcode = tk.Entry(
             textvariable=self.text_barcode,
             relief="raised",
-            font=(None, 24)
+            font=(None, 24),
+            justify='center'
         )
         self.lbl_barcode.place(
             x=459,
@@ -399,7 +425,7 @@ class MainMenu:
             image=self.button_image_1,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("button_1 clicked"),
+            command=self.wait_for_scan,
             relief="flat"
         )
         self.but_scan.place(
@@ -416,7 +442,7 @@ class MainMenu:
             image=self.button_image_2,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("button_2 clicked"),
+            command=update_labels,
             relief="flat"
         )
         self.but_new_entry.place(
@@ -433,7 +459,7 @@ class MainMenu:
             image=self.button_image_3,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("button_3 clicked"),
+            command=self.quantity_window,
             relief="flat"
         )
         self.but_edit_quant.place(
@@ -470,15 +496,73 @@ class MainMenu:
             outline="")
 
     def show_results(self, label_num):
-        list = select_by_barcode("11409-SOYrr-SI-019")
+        """ Shows the results in the labels. """
+
+        input = self.lbl_barcode.get()
+        list = select_by_barcode(f"{input}")
         if list[label_num] is None:
             return "NA"
         else:
             return list[label_num]
 
+    def wait_for_scan(self):
+        """ Prompt while waiting for barcode scan. """
+        messagebox.showinfo("NDSU Seed Archive", "Scan barcode now")
+
+    def quantity_return(self):
+        quantity = self.show_results(6)
+        print(quantity)
+
+    def quantity_window(self):
+        """ Open the quantity edit window. """
+        self.window = tk.Toplevel(self.master)
+        self.app = QuantityPopup(self.window)
+        sw = self.window.winfo_screenwidth()
+        sh = self.window.winfo_screenheight()
+        w = 250
+        h = 100
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.window.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
+
+class QuantityPopup:
+    """ Quantity edit window. """
+
+    def __init__(self, master):
+        self.master = master
+        master.title("Edit Quantity")
+        # master.geometry("250x100")
+
+        frm1 = tk.Frame(master, padx=5, pady=5)
+        frm1.grid(row=0, column=1)
+
+        lbl = tk.Label(frm1, text="How many grams were removed?", pady=5,
+                       padx=5).pack()
+
+        frm2 = tk.Frame(master, padx=5, pady=5)
+        frm2.grid(row=0, column=2)
+
+        entry = tk.Entry(frm2, justify='center', width=5).pack(pady=10, padx=5)
+
+        btn = tk.Button(master, text="Accept", padx=10).grid(
+            row=1, columnspan=5, pady=5)
+
+    def close(self):
+        self.master.destroy()
+
 
 def main():
     root = tk.Tk()
+
+    w = 1024
+    h = 1024
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    x = (sw / 2) - (w / 2)
+    y = (sh / 2) - (h / 2)
+    root.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
     app = MainMenu(root)
     root.mainloop()
 
