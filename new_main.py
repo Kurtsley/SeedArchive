@@ -3,8 +3,10 @@
 # Find menu class file.
 
 # imports
-from os import popen
+from datetime import datetime
+from sqlite3.dbapi2 import Error
 import tkinter as tk
+from tkinter import IntVar, StringVar, messagebox
 from pathlib import Path
 import sqlite3 as sql
 
@@ -62,18 +64,31 @@ def select_by_barcode(barcode=None):
         else:
             return "  "
 
-    def get_barcode(self):
-        """ Return the barcode input when the scan button is pressed (for now). """
-        self.input = self.lbl_barcode.get()
+
+def update_quantity(value, barcode):
+    """ Updates the quantity in the database. """
+    conn = create_connection(relative_to_assets(currentdb))
+
+    cursor = conn.cursor()
+
+    sql = f"""
+    UPDATE currentcrop SET "Quantity (g)" = {value}
+    WHERE "Barcode ID" = '{barcode}'
+    """
+
+    cursor.execute(sql)
+
+    conn.commit()
 
 
-class MainMenu(tk.Tk):
+class MainMenu(tk.Frame):
     """ Find menu class. """
 
     def __init__(self, master):
+        tk.Frame.__init__(self, master)
+
         self.master = master
 
-        master.geometry("1024x1024")
         master.configure(bg="#FFFFFF")
         master.title("NDSU Seed Archive")
         master.resizable(False, False)
@@ -93,6 +108,7 @@ class MainMenu(tk.Tk):
         self.text_designation = tk.StringVar()
         self.text_entrant = tk.StringVar()
         self.text_notes = tk.StringVar()
+        self.text_date = tk.StringVar()
 
         # Placing assets
 
@@ -224,7 +240,7 @@ class MainMenu(tk.Tk):
 
         self.canvas.create_text(
             575.0,
-            509.0,
+            590.0,
             anchor="nw",
             text="Germ %",
             fill="#000000",
@@ -240,7 +256,34 @@ class MainMenu(tk.Tk):
             font=("Roboto Bold", 24 * -1)
         )
 
+        self.canvas.create_text(
+            624,
+            509,
+            anchor='nw',
+            text="Date Edited",
+            fill="#000000",
+            font=("Roboto Bold", 24 * -1)
+        )
+
         # Creating labels
+
+        def update_labels():
+            self.text_barcode.set(self.show_results(0))
+            self.text_variety_id.set(self.show_results(1))
+            self.text_variety_name.set(
+                self.show_results(2))
+            self.text_crop.set(self.show_results(3))
+            self.text_source.set(self.show_results(4))
+            self.text_year.set(self.show_results(5))
+            self.text_quantity.set(float(self.show_results(6)))
+            self.text_germ.set(self.show_results(7))
+            self.text_tkw.set(self.show_results(8))
+            self.text_location.set(self.show_results(9))
+            self.text_designation.set(
+                self.show_results(10))
+            self.text_entrant.set(self.show_results(11))
+            self.text_notes.set(self.show_results(12))
+            self.text_date.set(self.date_convert())
 
         self.lbl_barcode = tk.Entry(
             textvariable=self.text_barcode,
@@ -346,7 +389,7 @@ class MainMenu(tk.Tk):
         )
         self.lbl_germ.place(
             x=666,
-            y=503,
+            y=584,
             width=255,
             height=40
         )
@@ -399,6 +442,18 @@ class MainMenu(tk.Tk):
             height=125
         )
 
+        self.lbl_date = tk.Label(
+            textvariable=self.text_date,
+            relief='raised',
+            font=(None, 14)
+        )
+        self.lbl_date.place(
+            x=757,
+            y=503,
+            width=164,
+            height=40
+        )
+
         # Scan button
         self.button_image_1 = tk.PhotoImage(
             file=relative_to_assets("scan.png"))
@@ -406,7 +461,7 @@ class MainMenu(tk.Tk):
             image=self.button_image_1,
             borderwidth=0,
             highlightthickness=0,
-            command=self.create_popup,
+            command=update_labels,
             relief="flat"
         )
         self.but_scan.place(
@@ -423,7 +478,7 @@ class MainMenu(tk.Tk):
             image=self.button_image_2,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("button_2 clicked"),
+            command=None,
             relief="flat"
         )
         self.but_new_entry.place(
@@ -433,21 +488,39 @@ class MainMenu(tk.Tk):
             height=65.0
         )
 
-        # Edit quantity button
+        # Add quantity button
         self.button_image_3 = tk.PhotoImage(
-            file=relative_to_assets("edit_quant.png"))
-        self.but_edit_quant = tk.Button(
+            file=relative_to_assets("add_but.png"))
+        self.but_add_quant = tk.Button(
             image=self.button_image_3,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("button_3 clicked"),
+            command=self.add_quantity,
             relief="flat"
         )
-        self.but_edit_quant.place(
-            x=683.0,
-            y=582.0,
-            width=221.0,
+        self.but_add_quant.place(
+            x=479.0,
+            y=473.0,
+            width=101.0,
             height=42.0
+        )
+
+        # Remove quantity button
+        self.button_image_5 = tk.PhotoImage(
+            file=relative_to_assets("rem_but.png"))
+        self.but_rem_quant = tk.Button(
+            image=self.button_image_5,
+            borderwidth=0,
+            highlightthickness=0,
+            command=self.remove_quantity,
+            relief='flat'
+        )
+
+        self.but_rem_quant.place(
+            x=479,
+            y=531,
+            width=101,
+            height=42
         )
 
         # Inventory button
@@ -457,7 +530,7 @@ class MainMenu(tk.Tk):
             image=self.button_image_4,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("invent"),
+            command=None,
             relief="flat"
         )
         self.but_inventory.place(
@@ -476,27 +549,148 @@ class MainMenu(tk.Tk):
             fill="#868686",
             outline="")
 
-        def update_results(self):
-            """ Updates the labels. """
-            self.text_variety_id.set(self.show_results(1))
-            self.text_variety_name.set(self.show_results(2))
-            self.text_crop.set(self.show_results(3))
-            self.text_source.set(self.show_results(4))
-            self.text_year.set(self.show_results(5))
-            self.text_quantity.set(self.show_results(6))
-            self.text_germ.set(self.show_results(7))
-            self.text_tkw.set(self.show_results(8))
-            self.text_location.set(self.show_results(9))
-            self.text_designation.set(self.show_results(10))
-            self.text_entrant.set(self.show_results(11))
-            self.text_notes.set(self.show_results(12))
+    def date_convert(self):
+        """ Convert date to correct format. """
+        date = self.show_results(13)
+        date = date[:10]
+        new_date = datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d/%Y')
+        return new_date
 
-        # Define the actions of the program within the mainloop
+    def show_results(self, label_num):
+        """ Shows the results in the labels. """
+
+        input = self.lbl_barcode.get()
+        list = select_by_barcode(f"{input}")
+        if list[label_num] is None:
+            return "NA"
+        else:
+            return list[label_num]
+
+    def add_quantity(self):
+        """ Change the quantity. """
+        value = QuantityPopupAdd(self).show()
+
+        original = self.text_quantity.get()
+        new = float(original) + value
+
+        barcode = self.text_barcode.get()
+        update_quantity(new, barcode)
+        self.text_quantity.set(float(self.show_results(6)))
+
+    def remove_quantity(self):
+        """ Change the quantity. """
+        value = QuantityPopupRemove(self).show()
+
+        original = self.text_quantity.get()
+        new = float(original) - value
+
+        barcode = self.text_barcode.get()
+        update_quantity(new, barcode)
+        self.text_quantity.set(float(self.show_results(6)))
+
+
+class QuantityPopupAdd(object):
+    """ Quantity edit window. """
+
+    def __init__(self, master):
+        self.master = tk.Toplevel(master)
+        self.master.title("Edit Quantity")
+        self.master.grab_set()
+        self.master.focus_force()
+        self.master.resizable(False, False)
+
+        self.text_quantity_remove = tk.StringVar()
+
+        frm1 = tk.Frame(self.master, padx=5, pady=5)
+        frm1.grid(row=0, column=1)
+
+        lbl = tk.Label(frm1, text="How many grams to add?", pady=5,
+                       padx=5).pack()
+
+        frm2 = tk.Frame(self.master, padx=5, pady=5)
+        frm2.grid(row=0, column=2)
+
+        entry = tk.Entry(frm2, justify='center',
+                         width=5, textvariable=self.text_quantity_remove).pack(pady=10, padx=5)
+
+        btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
+            row=1, columnspan=5, pady=5)
+
+    def show(self):
+        """ Show the quantity window and return the grams to remove. """
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 250
+        h = 100
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
+
+        self.master.deiconify()
+        self.master.wait_window()
+        value = self.text_quantity_remove.get()
+        return float(value)
+
+
+class QuantityPopupRemove(object):
+    """ Quantity edit window. """
+
+    def __init__(self, master):
+        self.master = tk.Toplevel(master)
+        self.master.title("Edit Quantity")
+        self.master.grab_set()
+        self.master.focus_force()
+        self.master.resizable(False, False)
+
+        self.text_quantity_remove = tk.StringVar()
+
+        frm1 = tk.Frame(self.master, padx=5, pady=5)
+        frm1.grid(row=0, column=1)
+
+        lbl = tk.Label(frm1, text="How many grams to remove?", pady=5,
+                       padx=5).pack()
+
+        frm2 = tk.Frame(self.master, padx=5, pady=5)
+        frm2.grid(row=0, column=2)
+
+        entry = tk.Entry(frm2, justify='center',
+                         width=5, textvariable=self.text_quantity_remove).pack(pady=10, padx=5)
+
+        btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
+            row=1, columnspan=5, pady=5)
+
+    def show(self):
+        """ Show the quantity window and return the grams to remove. """
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 250
+        h = 100
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
+
+        self.master.deiconify()
+        self.master.wait_window()
+        value = self.text_quantity_remove.get()
+        return float(value)
 
 
 def main():
+    """ Run the program. """
     root = tk.Tk()
+
+    w = 1024
+    h = 1024
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    x = (sw / 2) - (w / 2)
+    y = (sh / 2) - (h / 2)
+    root.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
     app = MainMenu(root)
+    app.pack()
     root.mainloop()
 
 
