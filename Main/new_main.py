@@ -5,10 +5,9 @@
 # imports
 from sqlite3.dbapi2 import Error
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import IntVar, StringVar, messagebox
 from pathlib import Path
 import sqlite3 as sql
-import os
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
@@ -61,8 +60,8 @@ def update_quantity(value, barcode):
     cursor = conn.cursor()
 
     sql = f"""
-        UPDATE currentcrop SET "Quantity (g)" = {value}
-        WHERE "Barcode ID" = '{barcode}'
+    UPDATE currentcrop SET "Quantity (g)" = {value}
+    WHERE "Barcode ID" = '{barcode}'
     """
 
     cursor.execute(sql)
@@ -70,10 +69,12 @@ def update_quantity(value, barcode):
     conn.commit()
 
 
-class MainMenu:
+class MainMenu(tk.Frame):
     """ Find menu class. """
 
     def __init__(self, master):
+        tk.Frame.__init__(self, master)
+
         self.master = master
 
         master.configure(bg="#FFFFFF")
@@ -89,7 +90,7 @@ class MainMenu:
         self.text_crop = tk.StringVar()
         self.text_source = tk.StringVar()
         self.text_year = tk.StringVar()
-        self.text_quantity = tk.IntVar()
+        self.text_quantity = tk.StringVar()
         self.text_germ = tk.StringVar()
         self.text_tkw = tk.StringVar()
         self.text_designation = tk.StringVar()
@@ -252,7 +253,8 @@ class MainMenu:
             self.text_crop.set(self.show_results(3))
             self.text_source.set(self.show_results(4))
             self.text_year.set(self.show_results(5))
-            self.text_quantity.set(round(self.show_results(6), ndigits=2))
+            self.text_quantity.set(float(self.show_results(6)))
+            # self.text_quantity.set(round(self.show_results(6), ndigits=2))
             self.text_germ.set(self.show_results(7))
             self.text_tkw.set(self.show_results(8))
             self.text_location.set(self.show_results(9))
@@ -425,7 +427,7 @@ class MainMenu:
             image=self.button_image_1,
             borderwidth=0,
             highlightthickness=0,
-            command=self.wait_for_scan,
+            command=update_labels,
             relief="flat"
         )
         self.but_scan.place(
@@ -442,7 +444,7 @@ class MainMenu:
             image=self.button_image_2,
             borderwidth=0,
             highlightthickness=0,
-            command=update_labels,
+            command=None,
             relief="flat"
         )
         self.but_new_entry.place(
@@ -459,7 +461,7 @@ class MainMenu:
             image=self.button_image_3,
             borderwidth=0,
             highlightthickness=0,
-            command=self.quantity_window,
+            command=self.change_quantity,
             relief="flat"
         )
         self.but_edit_quant.place(
@@ -476,7 +478,7 @@ class MainMenu:
             image=self.button_image_4,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("invent"),
+            command=None,
             relief="flat"
         )
         self.but_inventory.place(
@@ -505,51 +507,55 @@ class MainMenu:
         else:
             return list[label_num]
 
-    def wait_for_scan(self):
-        """ Prompt while waiting for barcode scan. """
-        messagebox.showinfo("NDSU Seed Archive", "Scan barcode now")
+    def change_quantity(self):
+        """ Change the quantity. """
+        value = QuantityPopup(self).show()
 
-    def quantity_return(self):
-        quantity = self.show_results(6)
-        print(quantity)
-
-    def quantity_window(self):
-        """ Open the quantity edit window. """
-        self.window = tk.Toplevel(self.master)
-        self.app = QuantityPopup(self.window)
-        sw = self.window.winfo_screenwidth()
-        sh = self.window.winfo_screenheight()
+        sw = value.winfo_screenwidth()
+        sh = value.winfo_screenheight()
         w = 250
         h = 100
         x = (sw / 2) - (w / 2)
         y = (sh / 2) - (h / 2)
-        self.window.geometry('%dx%d+%d+%d' % (w, h, x, y))
+        value.geometry("%dx%d+%d+%d" % (w, h, x, y))
+
+        original = self.text_quantity.get()
+        new = float(original) - value
+
+        barcode = self.text_barcode.get()
+        update_quantity(new, barcode)
 
 
-class QuantityPopup:
+class QuantityPopup(object):
     """ Quantity edit window. """
 
     def __init__(self, master):
-        self.master = master
-        master.title("Edit Quantity")
-        # master.geometry("250x100")
+        self.master = tk.Toplevel(master)
+        self.master.title("Edit Quantity")
+        self.master.grab_set()
 
-        frm1 = tk.Frame(master, padx=5, pady=5)
+        self.text_quantity_remove = tk.StringVar()
+
+        frm1 = tk.Frame(self.master, padx=5, pady=5)
         frm1.grid(row=0, column=1)
 
         lbl = tk.Label(frm1, text="How many grams were removed?", pady=5,
                        padx=5).pack()
 
-        frm2 = tk.Frame(master, padx=5, pady=5)
+        frm2 = tk.Frame(self.master, padx=5, pady=5)
         frm2.grid(row=0, column=2)
 
-        entry = tk.Entry(frm2, justify='center', width=5).pack(pady=10, padx=5)
+        entry = tk.Entry(frm2, justify='center',
+                         width=5, textvariable=self.text_quantity_remove).pack(pady=10, padx=5)
 
-        btn = tk.Button(master, text="Accept", padx=10).grid(
+        btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
 
-    def close(self):
-        self.master.destroy()
+    def show(self):
+        self.master.deiconify()
+        self.master.wait_window()
+        value = self.text_quantity_remove.get()
+        return float(value)
 
 
 def main():
@@ -564,6 +570,7 @@ def main():
     root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
     app = MainMenu(root)
+    app.pack()
     root.mainloop()
 
 
