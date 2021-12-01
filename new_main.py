@@ -227,7 +227,7 @@ class MainMenu(tk.Frame):
 
         self.canvas.create_text(
             575.0,
-            509.0,
+            590.0,
             anchor="nw",
             text="Germ %",
             fill="#000000",
@@ -366,7 +366,7 @@ class MainMenu(tk.Frame):
         )
         self.lbl_germ.place(
             x=666,
-            y=503,
+            y=584,
             width=255,
             height=40
         )
@@ -453,21 +453,39 @@ class MainMenu(tk.Frame):
             height=65.0
         )
 
-        # Edit quantity button
+        # Add quantity button
         self.button_image_3 = tk.PhotoImage(
-            file=relative_to_assets("edit_quant.png"))
-        self.but_edit_quant = tk.Button(
+            file=relative_to_assets("add_but.png"))
+        self.but_add_quant = tk.Button(
             image=self.button_image_3,
             borderwidth=0,
             highlightthickness=0,
-            command=self.change_quantity,
+            command=self.add_quantity,
             relief="flat"
         )
-        self.but_edit_quant.place(
-            x=683.0,
-            y=582.0,
-            width=221.0,
+        self.but_add_quant.place(
+            x=479.0,
+            y=473.0,
+            width=101.0,
             height=42.0
+        )
+
+        # Remove quantity button
+        self.button_image_5 = tk.PhotoImage(
+            file=relative_to_assets("rem_but.png"))
+        self.but_rem_quant = tk.Button(
+            image=self.button_image_5,
+            borderwidth=0,
+            highlightthickness=0,
+            command=self.remove_quantity,
+            relief='flat'
+        )
+
+        self.but_rem_quant.place(
+            x=479,
+            y=531,
+            width=101,
+            height=42
         )
 
         # Inventory button
@@ -506,7 +524,18 @@ class MainMenu(tk.Frame):
         else:
             return list[label_num]
 
-    def change_quantity(self):
+    def add_quantity(self):
+        """ Change the quantity. """
+        value = QuantityPopup(self).show()
+
+        original = self.text_quantity.get()
+        new = float(original) + value
+
+        barcode = self.text_barcode.get()
+        update_quantity(new, barcode)
+        self.text_quantity.set(float(self.show_results(6)))
+
+    def remove_quantity(self):
         """ Change the quantity. """
         value = QuantityPopup(self).show()
 
@@ -533,7 +562,7 @@ class QuantityPopup(object):
         frm1 = tk.Frame(self.master, padx=5, pady=5)
         frm1.grid(row=0, column=1)
 
-        lbl = tk.Label(frm1, text="How many grams were removed?", pady=5,
+        lbl = tk.Label(frm1, text="How many grams?", pady=5,
                        padx=5).pack()
 
         frm2 = tk.Frame(self.master, padx=5, pady=5)
