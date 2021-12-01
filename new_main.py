@@ -3,6 +3,7 @@
 # Find menu class file.
 
 # imports
+from datetime import datetime
 from sqlite3.dbapi2 import Error
 import tkinter as tk
 from tkinter import IntVar, StringVar, messagebox
@@ -96,6 +97,7 @@ class MainMenu(tk.Frame):
         self.text_designation = tk.StringVar()
         self.text_entrant = tk.StringVar()
         self.text_notes = tk.StringVar()
+        self.text_date = tk.StringVar()
 
         # Placing assets
 
@@ -243,6 +245,15 @@ class MainMenu(tk.Frame):
             font=("Roboto Bold", 24 * -1)
         )
 
+        self.canvas.create_text(
+            624,
+            509,
+            anchor='nw',
+            text="Date Edited",
+            fill="#000000",
+            font=("Roboto Bold", 24 * -1)
+        )
+
         # Creating labels
 
         def update_labels():
@@ -261,6 +272,7 @@ class MainMenu(tk.Frame):
                 self.show_results(10))
             self.text_entrant.set(self.show_results(11))
             self.text_notes.set(self.show_results(12))
+            self.text_date.set(self.date_convert())
 
         self.lbl_barcode = tk.Entry(
             textvariable=self.text_barcode,
@@ -419,6 +431,18 @@ class MainMenu(tk.Frame):
             height=125
         )
 
+        self.lbl_date = tk.Label(
+            textvariable=self.text_date,
+            relief='raised',
+            font=(None, 14)
+        )
+        self.lbl_date.place(
+            x=757,
+            y=503,
+            width=164,
+            height=40
+        )
+
         # Scan button
         self.button_image_1 = tk.PhotoImage(
             file=relative_to_assets("scan.png"))
@@ -514,6 +538,13 @@ class MainMenu(tk.Frame):
             fill="#868686",
             outline="")
 
+    def date_convert(self):
+        """ Convert date to correct format. """
+        date = self.show_results(13)
+        date = date[:10]
+        new_date = datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d/%Y')
+        return new_date
+
     def show_results(self, label_num):
         """ Shows the results in the labels. """
 
@@ -526,7 +557,7 @@ class MainMenu(tk.Frame):
 
     def add_quantity(self):
         """ Change the quantity. """
-        value = QuantityPopup(self).show()
+        value = QuantityPopupAdd(self).show()
 
         original = self.text_quantity.get()
         new = float(original) + value
@@ -537,7 +568,7 @@ class MainMenu(tk.Frame):
 
     def remove_quantity(self):
         """ Change the quantity. """
-        value = QuantityPopup(self).show()
+        value = QuantityPopupRemove(self).show()
 
         original = self.text_quantity.get()
         new = float(original) - value
@@ -547,7 +578,7 @@ class MainMenu(tk.Frame):
         self.text_quantity.set(float(self.show_results(6)))
 
 
-class QuantityPopup(object):
+class QuantityPopupAdd(object):
     """ Quantity edit window. """
 
     def __init__(self, master):
@@ -562,7 +593,51 @@ class QuantityPopup(object):
         frm1 = tk.Frame(self.master, padx=5, pady=5)
         frm1.grid(row=0, column=1)
 
-        lbl = tk.Label(frm1, text="How many grams?", pady=5,
+        lbl = tk.Label(frm1, text="How many grams to add?", pady=5,
+                       padx=5).pack()
+
+        frm2 = tk.Frame(self.master, padx=5, pady=5)
+        frm2.grid(row=0, column=2)
+
+        entry = tk.Entry(frm2, justify='center',
+                         width=5, textvariable=self.text_quantity_remove).pack(pady=10, padx=5)
+
+        btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
+            row=1, columnspan=5, pady=5)
+
+    def show(self):
+        """ Show the quantity window and return the grams to remove. """
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 250
+        h = 100
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
+
+        self.master.deiconify()
+        self.master.wait_window()
+        value = self.text_quantity_remove.get()
+        return float(value)
+
+
+class QuantityPopupRemove(object):
+    """ Quantity edit window. """
+
+    def __init__(self, master):
+        self.master = tk.Toplevel(master)
+        self.master.title("Edit Quantity")
+        self.master.grab_set()
+        self.master.focus_force()
+        self.master.resizable(False, False)
+
+        self.text_quantity_remove = tk.StringVar()
+
+        frm1 = tk.Frame(self.master, padx=5, pady=5)
+        frm1.grid(row=0, column=1)
+
+        lbl = tk.Label(frm1, text="How many grams to remove?", pady=5,
                        padx=5).pack()
 
         frm2 = tk.Frame(self.master, padx=5, pady=5)
