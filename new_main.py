@@ -36,7 +36,7 @@ def create_connection(db_file):
     return conn
 
 
-def select_by_barcode(barcode):
+def select_by_barcode(barcode=None):
     """ Sort by barcode. """
 
     conn = create_connection(relative_to_assets(currentdb))
@@ -52,6 +52,17 @@ def select_by_barcode(barcode):
 
     for i in result:
         return i
+
+    def show_results(self, label_num):
+        """ Show results in the main menu labels. """
+        if select_by_barcode():
+            list = select_by_barcode()
+            if list[label_num] is None:
+                return "NA"
+            else:
+                return list[label_num]
+        else:
+            return "  "
 
 
 def update_quantity(value, barcode):
