@@ -254,7 +254,6 @@ class MainMenu(tk.Frame):
             self.text_source.set(self.show_results(4))
             self.text_year.set(self.show_results(5))
             self.text_quantity.set(float(self.show_results(6)))
-            # self.text_quantity.set(round(self.show_results(6), ndigits=2))
             self.text_germ.set(self.show_results(7))
             self.text_tkw.set(self.show_results(8))
             self.text_location.set(self.show_results(9))
@@ -511,19 +510,12 @@ class MainMenu(tk.Frame):
         """ Change the quantity. """
         value = QuantityPopup(self).show()
 
-        sw = value.winfo_screenwidth()
-        sh = value.winfo_screenheight()
-        w = 250
-        h = 100
-        x = (sw / 2) - (w / 2)
-        y = (sh / 2) - (h / 2)
-        value.geometry("%dx%d+%d+%d" % (w, h, x, y))
-
         original = self.text_quantity.get()
         new = float(original) - value
 
         barcode = self.text_barcode.get()
         update_quantity(new, barcode)
+        self.text_quantity.set(float(self.show_results(6)))
 
 
 class QuantityPopup(object):
@@ -533,6 +525,8 @@ class QuantityPopup(object):
         self.master = tk.Toplevel(master)
         self.master.title("Edit Quantity")
         self.master.grab_set()
+        self.master.focus_force()
+        self.master.resizable(False, False)
 
         self.text_quantity_remove = tk.StringVar()
 
@@ -552,6 +546,16 @@ class QuantityPopup(object):
             row=1, columnspan=5, pady=5)
 
     def show(self):
+        """ Show the quantity window and return the grams to remove. """
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 250
+        h = 100
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
+
         self.master.deiconify()
         self.master.wait_window()
         value = self.text_quantity_remove.get()
@@ -559,6 +563,7 @@ class QuantityPopup(object):
 
 
 def main():
+    """ Run the program. """
     root = tk.Tk()
 
     w = 1024
