@@ -23,7 +23,6 @@ def relative_to_assets(path: str) -> Path:
 # Global database variables
 currentdb = relative_to_assets("currentcrops.db")
 archivedb = relative_to_assets("archivecrops.db")
-barcodedb = relative_to_assets("barcodes.db")
 
 
 def create_connection(db_file):
@@ -74,7 +73,7 @@ def update_quantity(value, barcode):
     cursor = conn.cursor()
 
     sql = f"""
-    UPDATE currentcrop SET "Quantity (g)" = {value}
+    UPDATE currentcrop SET "Quantity (g)" = {round(value, 2)}
     WHERE "Barcode ID" = '{barcode}'
     """
 
@@ -349,24 +348,6 @@ class MainMenu(tk.Frame):
 
         # Creating labels
 
-        def update_labels():
-            self.text_barcode.set(self.show_results(0))
-            self.text_variety_id.set(self.show_results(1))
-            self.text_variety_name.set(
-                self.show_results(2))
-            self.text_crop.set(self.show_results(3))
-            self.text_source.set(self.show_results(4))
-            self.text_year.set(self.show_results(5))
-            self.text_quantity.set(float(self.show_results(6)))
-            self.text_germ.set(self.show_results(7))
-            self.text_tkw.set(self.show_results(8))
-            self.text_location.set(self.show_results(9))
-            self.text_designation.set(
-                self.show_results(10))
-            self.text_entrant.set(self.show_results(11))
-            self.text_notes.set(self.show_results(12))
-            self.text_date.set(self.date_convert())
-
         self.lbl_barcode = tk.Entry(
             textvariable=self.text_barcode,
             relief="raised",
@@ -554,7 +535,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_1,
             borderwidth=0,
             highlightthickness=0,
-            command=update_labels,
+            command=self.get_barcode,
             relief="flat"
         )
         self.but_scan.place(
@@ -623,7 +604,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_4,
             borderwidth=0,
             highlightthickness=0,
-            command=self.current_date,
+            command=None,
             relief="flat"
         )
         self.but_inventory.place(
@@ -695,6 +676,24 @@ class MainMenu(tk.Frame):
             height=40
         )
 
+    def update_labels(self):
+        self.text_barcode.set(self.show_results(0))
+        self.text_variety_id.set(self.show_results(1))
+        self.text_variety_name.set(
+            self.show_results(2))
+        self.text_crop.set(self.show_results(3))
+        self.text_source.set(self.show_results(4))
+        self.text_year.set(self.show_results(5))
+        self.text_quantity.set(float(self.show_results(6)))
+        self.text_germ.set(self.show_results(7))
+        self.text_tkw.set(self.show_results(8))
+        self.text_location.set(self.show_results(9))
+        self.text_designation.set(
+            self.show_results(10))
+        self.text_entrant.set(self.show_results(11))
+        self.text_notes.set(self.show_results(12))
+        self.text_date.set(self.date_convert())
+
     def date_convert(self):
         """ Convert date to correct format. """
         date = self.show_results(13)
@@ -730,65 +729,91 @@ class MainMenu(tk.Frame):
 
     def add_quantity(self):
         """ Change the quantity. """
-        value = QuantityPopupAdd(self).show()
-
-        original = self.text_quantity.get()
-        new = float(original) + value
-
-        barcode = self.text_barcode.get()
-        update_quantity(new, barcode)
-        self.current_date()
-        self.text_quantity.set(float(self.show_results(6)))
+        try:
+            value = QuantityPopupAdd(self).show()
+            original = self.text_quantity.get()
+            new = float(original) + value
+            barcode = self.text_barcode.get()
+            update_quantity(new, barcode)
+            self.current_date()
+            self.text_quantity.set(float(self.show_results(6)))
+        except Exception:
+            pass
 
     def remove_quantity(self):
         """ Change the quantity. """
-        value = QuantityPopupRemove(self).show()
+        try:
+            value = QuantityPopupRemove(self).show()
 
-        original = self.text_quantity.get()
-        new = float(original) - value
+            original = self.text_quantity.get()
+            new = float(original) - value
 
-        barcode = self.text_barcode.get()
-        update_quantity(new, barcode)
-        self.current_date()
-        self.text_quantity.set(float(self.show_results(6)))
+            barcode = self.text_barcode.get()
+            update_quantity(new, barcode)
+            self.current_date()
+            self.text_quantity.set(float(self.show_results(6)))
+        except Exception:
+            pass
 
     def change_location(self):
         """ Change the location field. """
-        value = LocationChangePopup(self).show()
-        value = f'"{value}"'
+        try:
+            value = LocationChangePopup(self).show()
+            value = f'"{value}"'
 
-        barcode = self.text_barcode.get()
-        update_location(value, barcode)
-        self.current_date()
-        self.text_location.set(self.show_results(9))
+            barcode = self.text_barcode.get()
+            update_location(value, barcode)
+            self.current_date()
+            self.text_location.set(self.show_results(9))
+        except Exception:
+            pass
 
     def change_notes(self):
         """ Change the notes field. """
-        value = NotesChangePopup(self).show()
-        value = f'"{value}"'
+        try:
+            value = NotesChangePopup(self).show()
+            value = f'"{value}"'
 
-        barcode = self.text_barcode.get()
-        update_notes(value, barcode)
-        self.current_date()
-        self.text_notes.set(self.show_results(12))
+            barcode = self.text_barcode.get()
+            update_notes(value, barcode)
+            self.current_date()
+            self.text_notes.set(self.show_results(12))
+        except Exception:
+            pass
 
     def change_germ(self):
         """ Change the germ field. """
-        value = GermTKWChangePopup(self).show()
+        try:
+            value = GermTKWChangePopup(self).show()
 
-        barcode = self.text_barcode.get()
-        update_germ(value, barcode)
-        self.current_date()
-        self.text_germ.set(float(self.show_results(7)))
+            barcode = self.text_barcode.get()
+            update_germ(value, barcode)
+            self.current_date()
+            self.text_germ.set(float(self.show_results(7)))
+        except Exception:
+            pass
 
     def change_tkw(self):
         """ Change the tkw field. """
-        value = GermTKWChangePopup(self).show()
+        try:
+            value = GermTKWChangePopup(self).show()
 
-        barcode = self.text_barcode.get()
-        update_tkw(value, barcode)
-        self.current_date()
-        self.text_tkw.set(float(self.show_results(8)))
+            barcode = self.text_barcode.get()
+            update_tkw(value, barcode)
+            self.current_date()
+            self.text_tkw.set(float(self.show_results(8)))
+        except Exception:
+            pass
+
+    def get_barcode(self):
+        """ Get the barcode scan from the scanner. """
+        try:
+            value = BarcodePopup(self).show()
+            value = value.strip()
+            self.text_barcode.set(value)
+            self.update_labels()
+        except Exception:
+            pass
 
 
 class QuantityPopupAdd(object):
@@ -813,7 +838,9 @@ class QuantityPopupAdd(object):
         frm2.grid(row=0, column=2)
 
         entry = tk.Entry(frm2, justify='center',
-                         width=5, textvariable=self.text_quantity_remove).pack(pady=10, padx=5)
+                         width=5, textvariable=self.text_quantity_remove)
+        entry.pack(pady=10, padx=5)
+        entry.focus()
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
@@ -857,7 +884,9 @@ class QuantityPopupRemove(object):
         frm2.grid(row=0, column=2)
 
         entry = tk.Entry(frm2, justify='center',
-                         width=5, textvariable=self.text_quantity_remove).pack(pady=10, padx=5)
+                         width=5, textvariable=self.text_quantity_remove)
+        entry.pack(pady=10, padx=5)
+        entry.focus()
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
@@ -884,7 +913,7 @@ class LocationChangePopup(object):
 
     def __init__(self, master):
         self.master = tk.Toplevel(master)
-        self.master.title("Edit Quantity")
+        self.master.title("Edit Location")
         self.master.grab_set()
         self.master.focus_force()
         self.master.resizable(False, False)
@@ -901,7 +930,9 @@ class LocationChangePopup(object):
         frm2.grid(row=0, column=2)
 
         entry = tk.Entry(frm2, justify='left',
-                         width=20, textvariable=self.location_change).pack(pady=10, padx=5)
+                         width=20, textvariable=self.location_change)
+        entry.pack(pady=10, padx=5)
+        entry.focus()
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
@@ -928,7 +959,7 @@ class NotesChangePopup(object):
 
     def __init__(self, master):
         self.master = tk.Toplevel(master)
-        self.master.title("Edit Quantity")
+        self.master.title("Edit Notes")
         self.master.grab_set()
         self.master.focus_force()
         self.master.resizable(False, False)
@@ -947,6 +978,7 @@ class NotesChangePopup(object):
         entry = tk.Entry(
             frm2, width=50, textvariable=self.text_notes, font=(None, 10))
         entry.pack(pady=10, padx=5)
+        entry.focus()
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
@@ -973,7 +1005,7 @@ class GermTKWChangePopup(object):
 
     def __init__(self, master):
         self.master = tk.Toplevel(master)
-        self.master.title("Edit Quantity")
+        self.master.title("Edit TKW")
         self.master.grab_set()
         self.master.focus_force()
         self.master.resizable(False, False)
@@ -990,7 +1022,9 @@ class GermTKWChangePopup(object):
         frm2.grid(row=0, column=2)
 
         entry = tk.Entry(frm2, justify='center',
-                         width=5, textvariable=self.text_germ_change).pack(pady=10, padx=5)
+                         width=5, textvariable=self.text_germ_change)
+        entry.pack(pady=10, padx=5)
+        entry.focus()
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
@@ -1010,6 +1044,56 @@ class GermTKWChangePopup(object):
         self.master.wait_window()
         value = self.text_germ_change.get()
         return float(value)
+
+
+class BarcodePopup(object):
+    """ Germ edit window. """
+
+    def __init__(self, master):
+        self.master = tk.Toplevel(master)
+        self.master.title("Scan")
+        self.master.grab_set()
+        self.master.focus_force()
+        self.master.resizable(False, False)
+
+        self.text_barcode = tk.StringVar()
+
+        frm1 = tk.Frame(self.master, padx=5, pady=5)
+        frm1.grid(row=0, column=1)
+
+        lbl = tk.Label(frm1, text="Scan barcode now:", pady=5,
+                       padx=5).pack()
+
+        frm2 = tk.Frame(self.master, padx=5, pady=5)
+        frm2.grid(row=0, column=2)
+
+        entry = tk.Entry(frm2, justify='center',
+                         width=20, textvariable=self.text_barcode)
+        entry.pack(pady=10, padx=5)
+        entry.focus()
+        entry.bind('<Return>', self.close)
+
+        btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
+            row=1, columnspan=5, pady=5)
+
+    def close(self, event=None):
+        self.master.destroy()
+
+    def show(self):
+        """ Show the quantity window and return the grams to remove. """
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 350
+        h = 90
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
+
+        self.master.deiconify()
+        self.master.wait_window()
+        value = self.text_barcode.get()
+        return value
 
 
 def main():
