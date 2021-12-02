@@ -4,6 +4,7 @@
 
 # imports
 from datetime import datetime
+from datetime import date
 from sqlite3.dbapi2 import Cursor, Error
 import tkinter as tk
 from tkinter import IntVar, StringVar, messagebox
@@ -138,6 +139,22 @@ def update_tkw(value, barcode):
 
     sql = f"""
         UPDATE currentcrop SET "TKW (g)" = {value}
+        WHERE "Barcode ID" = '{barcode}'
+    """
+
+    cursor.execute(sql)
+
+    conn.commit()
+
+
+def update_date(value, barcode):
+    """ Updates the date to the current date in the database. """
+    conn = create_connection(relative_to_assets(currentdb))
+
+    cursor = conn.cursor()
+
+    sql = f"""
+        UPDATE currentcrop SET "43747" = {value}
         WHERE "Barcode ID" = '{barcode}'
     """
 
@@ -606,7 +623,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_4,
             borderwidth=0,
             highlightthickness=0,
-            command=None,
+            command=self.current_date,
             relief="flat"
         )
         self.but_inventory.place(
@@ -681,12 +698,16 @@ class MainMenu(tk.Frame):
     def date_convert(self):
         """ Convert date to correct format. """
         date = self.show_results(13)
-        date = date[:10]
-        if date == 'NA':
-            return "NA"
+        if len(date) == 10:
+            return date
         else:
-            new_date = datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d/%Y')
-            return new_date
+            date = date[:10]
+            if date:
+                return "NA"
+            else:
+                new_date = datetime.strptime(
+                    date, '%Y-%m-%d').strftime('%m/%d/%Y')
+                return new_date
 
     def show_results(self, label_num):
         """ Shows the results in the labels. """
@@ -698,6 +719,15 @@ class MainMenu(tk.Frame):
         else:
             return list[label_num]
 
+    def current_date(self):
+        """ Sets the edited date to current date. """
+        today = date.today()
+        dateformat = today.strftime('%m/%d/%Y')
+        dateformat = f'"{dateformat}"'
+        barcode = self.text_barcode.get()
+        update_date(dateformat, barcode)
+        self.text_date.set(self.show_results(13))
+
     def add_quantity(self):
         """ Change the quantity. """
         value = QuantityPopupAdd(self).show()
@@ -707,6 +737,7 @@ class MainMenu(tk.Frame):
 
         barcode = self.text_barcode.get()
         update_quantity(new, barcode)
+        self.current_date()
         self.text_quantity.set(float(self.show_results(6)))
 
     def remove_quantity(self):
@@ -718,6 +749,7 @@ class MainMenu(tk.Frame):
 
         barcode = self.text_barcode.get()
         update_quantity(new, barcode)
+        self.current_date()
         self.text_quantity.set(float(self.show_results(6)))
 
     def change_location(self):
@@ -727,6 +759,7 @@ class MainMenu(tk.Frame):
 
         barcode = self.text_barcode.get()
         update_location(value, barcode)
+        self.current_date()
         self.text_location.set(self.show_results(9))
 
     def change_notes(self):
@@ -736,6 +769,7 @@ class MainMenu(tk.Frame):
 
         barcode = self.text_barcode.get()
         update_notes(value, barcode)
+        self.current_date()
         self.text_notes.set(self.show_results(12))
 
     def change_germ(self):
@@ -744,6 +778,7 @@ class MainMenu(tk.Frame):
 
         barcode = self.text_barcode.get()
         update_germ(value, barcode)
+        self.current_date()
         self.text_germ.set(float(self.show_results(7)))
 
     def change_tkw(self):
@@ -752,6 +787,7 @@ class MainMenu(tk.Frame):
 
         barcode = self.text_barcode.get()
         update_tkw(value, barcode)
+        self.current_date()
         self.text_tkw.set(float(self.show_results(8)))
 
 
