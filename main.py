@@ -158,7 +158,7 @@ def max_variety_id():
 
     cursor = conn.cursor()
 
-    sql = f"""
+    sql = """
         SELECT MAX("Variety ID") FROM currentcrop
     """
 
@@ -170,16 +170,16 @@ def max_variety_id():
         return i
 
 
-def add_new_entry(barcode, date, varietyid, varietyname, year, quantity, tkw, germ, entrant, notes, location, crop, source, designation):
+def add_new_entry(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add a new row to the database. """
     conn = create_connection(relative_to_assets(currentdb))
 
     cursor = conn.cursor()
 
-    sql = """
-        INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "43747") 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
+    sql = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "43747")
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
 
@@ -1684,34 +1684,25 @@ class EntryMenu(object):
 
         # Seperate the list by value
         barcode = values[0]
-        barcode = f'"{barcode}"'
         date = values[1]
-        date = f'"{date}"'
         varietyid = values[2]
         varietyname = values[3]
-        varietyname = f'"{varietyname}"'
         year = values[4]
         quantity = values[5]
         tkw = values[6]
         germ = values[7]
         entrant = values[8]
-        entrant = f'"{entrant}"'
         notes = values[9]
-        notes = f'"{notes}"'
         location = values[10]
-        location = f'"{location}"'
         crop = values[11]
-        crop = f'"{crop}"'
         source = values[12]
-        source = f'"{source}"'
         designation = values[13]
-        designation = f'"{designation}"'
 
         print(barcode, date, varietyname, varietyid, year, quantity, tkw,
               germ, entrant, notes, location, crop, source, designation)
 
-        add_new_entry(barcode, date, varietyid, varietyname, year, quantity,
-                      tkw, germ, entrant, notes, location, crop, source, designation)
+        add_new_entry(barcode, varietyid, varietyname, crop, source, year,
+                      quantity, germ, tkw, location, designation, entrant, notes, date)
 
 
 def main():
