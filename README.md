@@ -9,3 +9,6 @@ Tool to replace Microsoft Excel for storage and management of the NDSU Research 
 - Sortable table view to view all entries in the current database. Sortable by crop type. (more sortable columns to come in the future)
 - Entries can be viewed by manual entry or scanning a barcode.
 - More to come.
+
+## Sample barcode for testing
+10192-OAT-016-DS
