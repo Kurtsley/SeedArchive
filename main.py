@@ -182,15 +182,19 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
     cursor1 = conn1.cursor()
     cursor2 = conn2.cursor()
 
-    sql = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
+    sql1 = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+
+    sql2 = """INSERT INTO archivecrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
     try:
-        cursor1.execute(sql, record)
-        cursor2.execute(sql, record)
+        cursor1.execute(sql1, record)
+        cursor2.execute(sql2, record)
 
         conn1.commit()
         conn2.commit()
@@ -202,6 +206,33 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
         print(traceback.format_exception(exc_type, exc_value, exc_tb))
     conn1.close()
     conn2.close()
+
+
+def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
+    """ Add an entry to the archive when a change is made. """
+    conn = create_connection(relative_to_assets(archivedb))
+
+    cursor = conn.cursor()
+
+    sql = """INSERT INTO archivecrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+
+    record = (barcode, varietyid, varietyname, crop, source, year,
+              quantity, germ, tkw, location, designation, entrant, notes, date)
+
+    try:
+        cursor.execute(sql, record)
+
+        conn.commit()
+
+    except sql.Error as er:
+        print('SQLite error: %s' % (' '.join(er.args)))
+        print("Exception class is: ", er.__class__)
+        print('SQLite traceback: ')
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        print(traceback.format_exception(exc_type, exc_value, exc_tb))
+    conn.close()
 
 
 def sql_to_datafrome():
@@ -626,7 +657,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_3,
             borderwidth=0,
             highlightthickness=0,
-            command=self.add_quantity,
+            command=lambda: [self.add_quantity(), self.archive_on_update()],
             relief="flat"
         )
         self.but_add_quant.place(
@@ -643,7 +674,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_5,
             borderwidth=0,
             highlightthickness=0,
-            command=self.remove_quantity,
+            command=lambda: [self.remove_quantity(), self.archive_on_update()],
             relief='flat'
         )
 
@@ -678,7 +709,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_6,
             border=0,
             highlightthickness=0,
-            command=self.change_location,
+            command=lambda: [self.change_location(), self.archive_on_update()],
             relief='flat'
         )
         self.but_edit_location.place(
@@ -693,7 +724,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_6,
             border=0,
             highlightthickness=0,
-            command=self.change_tkw,
+            command=lambda: [self.change_tkw(), self.archive_on_update()],
             relief='flat'
         )
         self.but_edit_tkw.place(
@@ -708,7 +739,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_6,
             border=0,
             highlightthickness=0,
-            command=self.change_germ,
+            command=lambda: [self.change_germ(), self.archive_on_update()],
             relief='flat'
         )
         self.but_edit_germ.place(
@@ -723,7 +754,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_6,
             border=0,
             highlightthickness=0,
-            command=self.change_notes,
+            command=lambda: [self.change_notes(), self.archive_on_update()],
             relief='flat'
         )
         self.but_edit_notes.place(
@@ -750,6 +781,30 @@ class MainMenu(tk.Frame):
         self.text_entrant.set(self.show_results(11))
         self.text_notes.set(self.show_results(12))
         self.text_date.set(self.date_convert())
+
+    def archive_on_update(self):
+        """ Retrieve all the text for archiving purposes. """
+        barcode = self.text_barcode.get()
+        varietyid = self.text_variety_id.get()
+        varietyname = self.text_variety_name.get()
+        crop = self.text_crop.get()
+        source = self.text_source.get()
+        year = self.text_year.get()
+        quantityold = self.text_quantity.get()
+        quantityfloat = float(quantityold)
+        quantity = int(quantityfloat)
+        entrant = self.text_entrant.get()
+        germold = self.text_germ.get()
+        germfloat = float(germold)
+        germ = int(germfloat)
+        tkw = self.text_tkw.get()
+        location = self.text_location.get()
+        designation = self.text_designation.get()
+        notes = self.text_notes.get()
+        date = self.text_date.get()
+
+        add_to_archive(barcode, varietyid, varietyname, crop, source, year,
+                       quantity, germ, tkw, location, designation, entrant, notes, date)
 
     def date_convert(self):
         """ Convert date to correct format. """
@@ -854,7 +909,6 @@ class MainMenu(tk.Frame):
         """ Change the tkw field. """
         try:
             value = GermTKWChangePopup(self).show()
-
             barcode = self.text_barcode.get()
             update_tkw(value, barcode)
             self.current_date()
@@ -986,6 +1040,9 @@ class LocationChangePopup(object):
 
         self.location_change = tk.StringVar()
 
+        self.locations = ('Cabinet 1 / Shelf 1', 'Cabinet 1 / Shelf 2', 'Cabinet 1 / Shelf 3', 'Cabinet 1 / Shelf 4', 'Cabinet 1 / Shelf 5', 'Cabinet 2 / Shelf 1', 'Cabinet 2 / Shelf 2', 'Cabinet 2 / Shelf 3', 'Cabinet 2 / Shelf 4', 'Cabinet 2 / Shelf 5', 'Cabinet 3 / Shelf 1', 'Cabinet 3 / Shelf 2', 'Cabinet 3 / Shelf 3', 'Cabinet 3 / Shelf 4', 'Cabinet 3 / Shelf 5', 'Cabinet 4 / Shelf 1', 'Cabinet 4 / Shelf 2', 'Cabinet 4 / Shelf 3', 'Cabinet 4 / Shelf 4',
+                          'Cabinet 4 / Shelf 5', 'Cabinet 5 / Shelf 1', 'Cabinet 5 / Shelf 2', 'Cabinet 5 / Shelf 3', 'Cabinet 5 / Shelf 4', 'Cabinet 5 / Shelf 5', 'Cabinet 6 / Shelf 1', 'Cabinet 6 / Shelf 2', 'Cabinet 6 / Shelf 3', 'Cabinet 6 / Shelf 4', 'Cabinet 6 / Shelf 5', 'Cabinet 7 / Shelf 1', 'Cabinet 7 / Shelf 2', 'Cabinet 7 / Shelf 3', 'Cabinet 7 / Shelf 4', 'Cabinet 7 / Shelf 5', 'Cabinet 8 / Shelf 1', 'Cabinet 8 / Shelf 2', 'Cabinet 8 / Shelf 3', 'Cabinet 8 / Shelf 4', 'Cabinet 8 / Shelf 5', 'Cabinet 9 / Shelf 1', 'Cabinet 9 / Shelf 2', 'Cabinet 9 / Shelf 3', 'Cabinet 9 / Shelf 4', 'Cabinet 9 / Shelf 5', 'Cabinet 10 / Shelf 1', 'Cabinet 10 / Shelf 2', 'Cabinet 10 / Shelf 3', 'Cabinet 10 / Shelf 4', 'Cabinet 10 / Shelf 5', 'Cabinet 11 / Shelf 1', 'Cabinet 11 / Shelf 2', 'Cabinet 11 / Shelf 3', 'Cabinet 11 / Shelf 4', 'Cabinet 11 / Shelf 5', 'Open Shelf 1 / Shelf 1', 'Open Shelf 1 / Shelf 2', 'Open Shelf 1 / Shelf 3', 'Open Shelf 1 / Shelf 4', 'Open Shelf 2 / Shelf 1', 'Open Shelf 2 / Shelf 2', 'Open Shelf 2 / Shelf 3', 'Open Shelf 2 / Shelf 4', 'Open Shelf 2 / Shelf 5', 'Cart', 'THROWN OUT')
+
         frm1 = tk.Frame(self.master, padx=5, pady=5)
         frm1.grid(row=0, column=1)
 
@@ -995,10 +1052,13 @@ class LocationChangePopup(object):
         frm2 = tk.Frame(self.master, padx=5, pady=5)
         frm2.grid(row=0, column=2)
 
-        entry = tk.Entry(frm2, justify='left',
-                         width=20, textvariable=self.location_change)
-        entry.pack(pady=10, padx=5)
-        entry.focus()
+        self.location_menu = tk.OptionMenu(
+            frm2,
+            self.location_change,
+            *self.locations,
+            command=None
+        )
+        self.location_menu.pack()
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
@@ -1007,7 +1067,7 @@ class LocationChangePopup(object):
         """ Show the quantity window and return the grams to add or remove. """
         sw = self.master.winfo_screenwidth()
         sh = self.master.winfo_screenheight()
-        w = 250
+        w = 270
         h = 100
         x = (sw / 2) - (w / 2)
         y = (sh / 2) - (h / 2)
