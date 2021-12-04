@@ -7,7 +7,7 @@ from datetime import datetime
 from datetime import date
 from sqlite3.dbapi2 import Cursor, Error
 import tkinter as tk
-from tkinter import IntVar, StringVar, messagebox
+from tkinter import Button, IntVar, StringVar, messagebox
 from pathlib import Path
 import sqlite3 as sql
 from tkinter import font
@@ -246,6 +246,20 @@ def sql_to_datafrome():
         conn
     )
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
+                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+    return df
+
+
+def sql_history_dataframe(barcode):
+    """ Return a dataframe of a specific barcode in archive. """
+    conn = create_connection(relative_to_assets(archivedb))
+
+    sql = pd.read_sql_query(
+        f"""
+        SELECT * FROM archivecrop WHERE "Barcode ID" = '{barcode}'
+    """, conn
+    )
+    df = pd.DataFrame(sql, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
     return df
 
@@ -616,6 +630,23 @@ class MainMenu(tk.Frame):
             fill="#868686",
             outline="")
 
+        # History button
+        self.but_image_7 = tk.PhotoImage(
+            file=relative_to_assets("history.png"))
+        self.but_history = tk.Button(
+            image=self.but_image_7,
+            borderwidth=0,
+            highlightthickness=0,
+            command=self.open_history,
+            relief='flat'
+        )
+        self.but_history.place(
+            x=43,
+            y=146,
+            width=117,
+            height=40
+        )
+
         # Scan button
         self.button_image_1 = tk.PhotoImage(
             file=relative_to_assets("scan.png"))
@@ -784,27 +815,30 @@ class MainMenu(tk.Frame):
 
     def archive_on_update(self):
         """ Retrieve all the text for archiving purposes. """
-        barcode = self.text_barcode.get()
-        varietyid = self.text_variety_id.get()
-        varietyname = self.text_variety_name.get()
-        crop = self.text_crop.get()
-        source = self.text_source.get()
-        year = self.text_year.get()
-        quantityold = self.text_quantity.get()
-        quantityfloat = float(quantityold)
-        quantity = int(quantityfloat)
-        entrant = self.text_entrant.get()
-        germold = self.text_germ.get()
-        germfloat = float(germold)
-        germ = int(germfloat)
-        tkw = self.text_tkw.get()
-        location = self.text_location.get()
-        designation = self.text_designation.get()
-        notes = self.text_notes.get()
-        date = self.text_date.get()
+        try:
+            barcode = self.text_barcode.get()
+            varietyid = self.text_variety_id.get()
+            varietyname = self.text_variety_name.get()
+            crop = self.text_crop.get()
+            source = self.text_source.get()
+            year = self.text_year.get()
+            quantityold = self.text_quantity.get()
+            quantityfloat = float(quantityold)
+            quantity = int(quantityfloat)
+            entrant = self.text_entrant.get()
+            germold = self.text_germ.get()
+            germfloat = float(germold)
+            germ = int(germfloat)
+            tkw = self.text_tkw.get()
+            location = self.text_location.get()
+            designation = self.text_designation.get()
+            notes = self.text_notes.get()
+            date = self.text_date.get()
 
-        add_to_archive(barcode, varietyid, varietyname, crop, source, year,
-                       quantity, germ, tkw, location, designation, entrant, notes, date)
+            add_to_archive(barcode, varietyid, varietyname, crop, source, year,
+                           quantity, germ, tkw, location, designation, entrant, notes, date)
+        except Exception:
+            pass
 
     def date_convert(self):
         """ Convert date to correct format. """
@@ -934,6 +968,10 @@ class MainMenu(tk.Frame):
 
     def open_table(self):
         TableView(self).show()
+
+    def open_history(self):
+        barcode = self.text_barcode.get()
+        HistoryView(self, barcode).show()
 
 
 class QuantityPopupAdd(object):
@@ -1846,6 +1884,51 @@ class TableView(object):
     def select_crop(self, event=None):
         self.tree.delete(*self.tree.get_children())
         for index, row in self.df.loc[self.df["Crop"].eq(self.combo_crop.get())].iterrows():
+            self.tree.insert("", "end", text=index, values=list(row))
+
+    def show(self):
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 1024
+        h = 1024
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
+
+
+class HistoryView(object):
+    """ Show the history view window. """
+
+    def __init__(self, master, barcode):
+        self.master = tk.Toplevel(master)
+        self.master.title("History")
+        self.master.grab_set()
+        self.master.resizable(False, False)
+        self.master.state("zoomed")
+
+        barcode = barcode
+
+        self.df = sql_history_dataframe(barcode)
+        self.df["Variety ID"] = self.df["Variety ID"].fillna(0).astype(int)
+
+        self.tree = ttk.Treeview(self.master)
+        self.tree['show'] = 'headings'
+        columns = list(self.df.columns)
+
+        self.scrollx = ttk.Scrollbar(self.master, orient=HORIZONTAL)
+        self.scrollx.configure(command=self.tree.xview)
+        self.tree.configure(xscrollcommand=self.tree.set)
+        self.scrollx.pack(side='bottom', fill='x')
+
+        self.tree["columns"] = columns
+        self.tree.pack(expand=True, fill=BOTH)
+
+        for i in columns:
+            self.tree.column(i, anchor='w')
+            self.tree.heading(i, text=i, anchor='w')
+
+        for index, row in self.df.iterrows():
             self.tree.insert("", "end", text=index, values=list(row))
 
     def show(self):
