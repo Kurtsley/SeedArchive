@@ -11,7 +11,9 @@ from tkinter import IntVar, StringVar, messagebox
 from pathlib import Path
 import sqlite3 as sql
 from tkinter import font
-from tkinter.constants import END, HIDDEN
+from tkinter.constants import BOTH, END, HIDDEN
+import pandas as pd
+from tkinter import ttk
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
@@ -170,11 +172,13 @@ def max_variety_id():
         return i
 
 
-def add_new_entry(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
+def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add a new row to the database. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn1 = create_connection(relative_to_assets(currentdb))
+    conn2 = create_connection(relative_to_assets(archivedb))
 
-    cursor = conn.cursor()
+    cursor1 = conn1.cursor()
+    cursor2 = conn2.cursor()
 
     sql = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "43747")
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -183,9 +187,26 @@ def add_new_entry(barcode, varietyid, varietyname, crop, source, year, quantity,
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
 
-    cursor.execute(sql, record)
+    cursor1.execute(sql, record)
+    cursor2.execute(sql, record)
 
-    conn.commit()
+    conn1.commit()
+    conn2.commit()
+
+
+def sql_to_datafrome():
+    """ Take the archive database and return a dataframe. """
+    conn = create_connection(relative_to_assets(archivedb))
+
+    sql_query = pd.read_sql_query(
+        """
+    SELECT * FROM archivecrop
+    """,
+        conn
+    )
+    df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
+                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', '43747'])
+    return df
 
 
 class MainMenu(tk.Frame):
@@ -630,7 +651,7 @@ class MainMenu(tk.Frame):
             image=self.button_image_4,
             borderwidth=0,
             highlightthickness=0,
-            command=None,
+            command=self.open_table,
             relief="flat"
         )
         self.but_inventory.place(
@@ -843,6 +864,9 @@ class MainMenu(tk.Frame):
 
     def open_entry(self):
         EntryMenu(self).show()
+
+    def open_table(self):
+        TableView(self).show()
 
 
 class QuantityPopupAdd(object):
@@ -1701,8 +1725,45 @@ class EntryMenu(object):
         print(barcode, date, varietyname, varietyid, year, quantity, tkw,
               germ, entrant, notes, location, crop, source, designation)
 
-        add_new_entry(barcode, varietyid, varietyname, crop, source, year,
-                      quantity, germ, tkw, location, designation, entrant, notes, date)
+        add_entry(barcode, varietyid, varietyname, crop, source, year,
+                  quantity, germ, tkw, location, designation, entrant, notes, date)
+
+
+class TableView(object):
+    """ Show a filterable table. """
+
+    def __init__(self, master):
+        self.master = tk.Toplevel(master)
+        self.master.title("Archive")
+        self.master.grab_set()
+        self.master.resizable(False, False)
+
+        df = sql_to_datafrome()
+
+        self.tree = ttk.Treeview(master)
+        columns = list(df.columns)
+        self.combo = ttk.Combobox(master, values=list(
+            df["Barcode ID"].unique()), state='readonly')
+        self.combo.pack()
+        self.tree["columns"] = columns
+        self.tree.pack(expand=True, fill=BOTH)
+
+        for i in columns:
+            self.tree.column(i, anchor='w')
+            self.tree.heading(i, text=i, anchor='w')
+
+        for index, row in df.iterrows():
+            self.tree.insert("", "end", text=index, values=list(row))
+
+    def show(self):
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 1024
+        h = 1024
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
 
 
 def main():
