@@ -11,9 +11,11 @@ from tkinter import IntVar, StringVar, messagebox
 from pathlib import Path
 import sqlite3 as sql
 from tkinter import font
-from tkinter.constants import BOTH, END, HIDDEN
+from tkinter.constants import BOTH, BOTTOM, E, END, HIDDEN, HORIZONTAL, N, S, TOP, W
 import pandas as pd
 from tkinter import ttk
+import sys
+import traceback
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
@@ -145,7 +147,7 @@ def update_date(value, barcode):
     cursor = conn.cursor()
 
     sql = f"""
-        UPDATE currentcrop SET "43747" = {value}
+        UPDATE currentcrop SET "Date Edited" = {value}
         WHERE "Barcode ID" = '{barcode}'
     """
 
@@ -180,32 +182,40 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
     cursor1 = conn1.cursor()
     cursor2 = conn2.cursor()
 
-    sql = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "43747")
+    sql = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
+    try:
+        cursor1.execute(sql, record)
+        cursor2.execute(sql, record)
 
-    cursor1.execute(sql, record)
-    cursor2.execute(sql, record)
-
-    conn1.commit()
-    conn2.commit()
+        conn1.commit()
+        conn2.commit()
+    except sql.Error as er:
+        print('SQLite error: %s' % (' '.join(er.args)))
+        print("Exception class is: ", er.__class__)
+        print('SQLite traceback: ')
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        print(traceback.format_exception(exc_type, exc_value, exc_tb))
+    conn1.close()
+    conn2.close()
 
 
 def sql_to_datafrome():
     """ Take the archive database and return a dataframe. """
-    conn = create_connection(relative_to_assets(archivedb))
+    conn = create_connection(relative_to_assets(currentdb))
 
     sql_query = pd.read_sql_query(
         """
-    SELECT * FROM archivecrop
+    SELECT * FROM currentcrop
     """,
         conn
     )
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
-                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', '43747'])
+                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
     return df
 
 
@@ -863,7 +873,10 @@ class MainMenu(tk.Frame):
             pass
 
     def open_entry(self):
-        EntryMenu(self).show()
+        try:
+            EntryMenu(self).show()
+        except Exception:
+            pass
 
     def open_table(self):
         TableView(self).show()
@@ -1058,7 +1071,7 @@ class GermTKWChangePopup(object):
 
     def __init__(self, master):
         self.master = tk.Toplevel(master)
-        self.master.title("Edit TKW")
+        self.master.title("Edit Value")
         self.master.grab_set()
         self.master.focus_force()
         self.master.resizable(False, False)
@@ -1079,8 +1092,9 @@ class GermTKWChangePopup(object):
         entry.pack(pady=10, padx=5)
         entry.focus()
 
-        btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
-            row=1, columnspan=5, pady=5)
+        btn = tk.Button(self.master, text="Accept", padx=10,
+                        command=self.master.destroy)
+        btn.grid(row=1, column=2, columnspan=2)
 
     def show(self):
         """ Show the quantity window and return the grams to remove. """
@@ -1722,9 +1736,6 @@ class EntryMenu(object):
         source = values[12]
         designation = values[13]
 
-        print(barcode, date, varietyname, varietyid, year, quantity, tkw,
-              germ, entrant, notes, location, crop, source, designation)
-
         add_entry(barcode, varietyid, varietyname, crop, source, year,
                   quantity, germ, tkw, location, designation, entrant, notes, date)
 
@@ -1737,14 +1748,31 @@ class TableView(object):
         self.master.title("Archive")
         self.master.grab_set()
         self.master.resizable(False, False)
+        self.master.state("zoomed")
 
-        df = sql_to_datafrome()
+        self.df = sql_to_datafrome()
+        self.df["Variety ID"] = self.df["Variety ID"].fillna(0).astype(int)
 
-        self.tree = ttk.Treeview(master)
-        columns = list(df.columns)
-        self.combo = ttk.Combobox(master, values=list(
-            df["Barcode ID"].unique()), state='readonly')
-        self.combo.pack()
+        self.tree = ttk.Treeview(self.master)
+        self.tree['show'] = 'headings'
+        columns = list(self.df.columns)
+
+        self.frm1 = tk.Frame(self.master)
+        self.frm1.pack(side='left', anchor='nw', padx=5, pady=20)
+
+        self.combo_crop = ttk.Combobox(self.frm1, values=list(
+            self.df["Crop"].unique()), state='readonly')
+        self.combo_crop.pack(side=BOTTOM)
+        self.combo_crop.bind("<<ComboboxSelected>>", self.select_crop)
+
+        self.lbl_crop = tk.Label(self.frm1, text="Select Crop")
+        self.lbl_crop.pack(side=TOP)
+
+        self.scrollx = ttk.Scrollbar(self.master, orient=HORIZONTAL)
+        self.scrollx.configure(command=self.tree.xview)
+        self.tree.configure(xscrollcommand=self.tree.set)
+        self.scrollx.pack(side='bottom', fill='x')
+
         self.tree["columns"] = columns
         self.tree.pack(expand=True, fill=BOTH)
 
@@ -1752,7 +1780,12 @@ class TableView(object):
             self.tree.column(i, anchor='w')
             self.tree.heading(i, text=i, anchor='w')
 
-        for index, row in df.iterrows():
+        for index, row in self.df.iterrows():
+            self.tree.insert("", "end", text=index, values=list(row))
+
+    def select_crop(self, event=None):
+        self.tree.delete(*self.tree.get_children())
+        for index, row in self.df.loc[self.df["Crop"].eq(self.combo_crop.get())].iterrows():
             self.tree.insert("", "end", text=index, values=list(row))
 
     def show(self):
