@@ -19,10 +19,15 @@ import traceback
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+BACKUPS_PATH = OUTPUT_PATH / Path("./backups")
 
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
+
+
+def relative_to_backups(path: str) -> Path:
+    return BACKUPS_PATH / Path(path)
 
 
 # Global database variables
@@ -40,6 +45,19 @@ def create_connection(db_file):
         print(e)
 
     return conn
+
+
+def db_save(backup_name):
+    """ Save a named copy of the current DB to the backups folder """
+
+    conn = create_connection(relative_to_assets(currentdb))
+    conn_backup = create_connection(relative_to_backups("currentcrops.db.{backup_name}"))
+
+    conn.backup(conn_backup)
+
+    conn_backup.close()
+    conn.close()
+
 
 
 def select_by_barcode(barcode=None):
