@@ -55,6 +55,7 @@ def select_by_barcode(barcode=None):
         """
     )
     result = cursor.fetchall()
+    conn.close()
 
     for i in result:
         return i
@@ -74,6 +75,7 @@ def update_quantity(value, barcode):
     cursor.execute(sql)
 
     conn.commit()
+    conn.close()
 
 
 def update_location(value, barcode):
@@ -90,6 +92,7 @@ def update_location(value, barcode):
     cursor.execute(sql)
 
     conn.commit()
+    conn.close()
 
 
 def update_notes(value, barcode):
@@ -106,6 +109,7 @@ def update_notes(value, barcode):
     cursor.execute(sql)
 
     conn.commit()
+    conn.close()
 
 
 def update_germ(value, barcode):
@@ -122,6 +126,7 @@ def update_germ(value, barcode):
     cursor.execute(sql)
 
     conn.commit()
+    conn.close()
 
 
 def update_tkw(value, barcode):
@@ -138,6 +143,7 @@ def update_tkw(value, barcode):
     cursor.execute(sql)
 
     conn.commit()
+    conn.close()
 
 
 def update_date(value, barcode):
@@ -154,6 +160,7 @@ def update_date(value, barcode):
     cursor.execute(sql)
 
     conn.commit()
+    conn.close()
 
 
 def max_variety_id():
@@ -169,6 +176,7 @@ def max_variety_id():
     cursor.execute(sql)
 
     result = cursor.fetchall()
+    conn.close()
 
     for i in result:
         return i
@@ -247,6 +255,8 @@ def sql_to_datafrome():
     )
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+    
+    conn.close()
     return df
 
 
@@ -261,6 +271,8 @@ def sql_history_dataframe(barcode):
     )
     df = pd.DataFrame(sql, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+    
+    conn.close()
     return df
 
 
