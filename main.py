@@ -255,7 +255,7 @@ def sql_to_datafrome():
     )
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
-    
+
     conn.close()
     return df
 
@@ -271,7 +271,7 @@ def sql_history_dataframe(barcode):
     )
     df = pd.DataFrame(sql, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
-    
+
     conn.close()
     return df
 
@@ -642,6 +642,10 @@ class MainMenu(tk.Frame):
             fill="#868686",
             outline="")
 
+        # Menu Bar
+        menubar = MainMenuBar(master)
+        master.config(menu=menubar)
+
         # History button
         self.but_image_7 = tk.PhotoImage(
             file=relative_to_assets("history.png"))
@@ -984,6 +988,26 @@ class MainMenu(tk.Frame):
     def open_history(self):
         barcode = self.text_barcode.get()
         HistoryView(self, barcode).show()
+
+
+class MainMenuBar(tk.Menu):
+    """ Class for main menu bar. """
+
+    def __init__(self, master):
+        tk.Menu.__init__(self, master)
+        filemenu = tk.Menu(self, tearoff=False)
+
+        # TODO Need to add a version popup.
+        self.add_cascade(label="File", underline=0, menu=filemenu)
+        # TODO
+
+        filemenu.add_command(label="About", command=None)
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=quit)
+
+    def close(self):
+        """ Exit program. """
+        sys.exit(0)
 
 
 class QuantityPopupAdd(object):
