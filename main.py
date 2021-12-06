@@ -5,13 +5,13 @@
 # imports
 from datetime import datetime
 from datetime import date
-from sqlite3.dbapi2 import Cursor, Error
+from sqlite3.dbapi2 import Cursor, Error, version
 import tkinter as tk
 from tkinter import Button, IntVar, StringVar, messagebox
 from pathlib import Path
 import sqlite3 as sql
 from tkinter import font
-from tkinter.constants import BOTH, BOTTOM, E, END, HIDDEN, HORIZONTAL, N, S, TOP, W
+from tkinter.constants import BOTH, BOTTOM, CENTER, E, END, HIDDEN, HORIZONTAL, N, S, TOP, W
 import pandas as pd
 from tkinter import ttk
 import sys
@@ -19,6 +19,8 @@ import traceback
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+
+program_version = "0.1.0"
 
 
 def relative_to_assets(path: str) -> Path:
@@ -1001,13 +1003,50 @@ class MainMenuBar(tk.Menu):
         self.add_cascade(label="File", underline=0, menu=filemenu)
         # TODO
 
-        filemenu.add_command(label="About", command=None)
+        filemenu.add_command(label="About", command=self.about)
         filemenu.add_separator()
-        filemenu.add_command(label="Exit", command=quit)
+        filemenu.add_command(label="Exit", command=self.close)
+
+    def about(self):
+        """ Version info popup. """
+        AboutPopup(self).show()
 
     def close(self):
         """ Exit program. """
         sys.exit(0)
+
+
+class AboutPopup(object):
+    """ Version Popup. """
+
+    def __init__(self, master):
+        self.master = tk.Toplevel(master)
+        self.master.title("About")
+        self.master.grab_set()
+        self.master.focus_force()
+        self.master.resizable(False, False)
+
+        self.lbl = tk.Label(
+            self.master, text=f"SeedArchive v{program_version}\n2021 Beard Industries")
+        self.lbl.place(relx=.5, rely=.3, anchor='center')
+
+        self.btn = tk.Button(self.master, anchor='center',
+                             width=7, height=2, text="OK", command=self.close)
+        self.btn.pack(side="bottom", pady=5)
+
+    def close(self):
+        self.master.destroy()
+
+    def show(self):
+        """ Show the popup. """
+        sw = self.master.winfo_screenwidth()
+        sh = self.master.winfo_screenheight()
+        w = 250
+        h = 100
+        x = (sw / 2) - (w / 2)
+        y = (sh / 2) - (h / 2)
+        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
+        self.master.attributes('-topmost', True)
 
 
 class QuantityPopupAdd(object):
@@ -1169,7 +1208,7 @@ class NotesChangePopup(object):
         frm1 = tk.Frame(self.master, padx=5, pady=5)
         frm1.grid(row=0, column=1)
 
-        lbl = tk.Label(frm1, text="Enter new value:", pady=5,
+        lbl = tk.Label(frm1, text="Enter Notes:", pady=5,
                        padx=5).pack()
 
         frm2 = tk.Frame(self.master, padx=5, pady=5)
