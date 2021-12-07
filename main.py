@@ -38,150 +38,162 @@ def create_connection(db_file):
 
     try:
         conn = sql.connect(db_file)
+
     except sql.Error as e:
         print(e)
 
-    return conn
+    finally:
+        return conn
 
 
 def select_by_barcode(barcode=None):
     """ Sort by barcode. """
-
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    cursor.execute(
-        f"""
-        SELECT * FROM currentcrop WHERE "Barcode ID" = '{barcode}'
-        """
-    )
-    result = cursor.fetchall()
-    conn.close()
+    sql = f"""SELECT * FROM currentcrop WHERE "Barcode ID" = '{barcode}'"""
 
-    for i in result:
-        return i
+    try:
+        cursor.execute(sql)
+
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        result = cursor.fetchall()
+        conn.close()
+
+        for i in result:
+            return i    
 
 
 def update_quantity(value, barcode):
     """ Updates the quantity in the database. """
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    sql = f"""
-    UPDATE currentcrop SET "Quantity (g)" = {round(value, 2)}
-    WHERE "Barcode ID" = '{barcode}'
-    """
+    sql = f"""UPDATE currentcrop SET 'Quantity (g)' = {round(value, 2)} WHERE 'Barcode ID' = '{barcode}'"""
 
-    cursor.execute(sql)
+    try:    
+        cursor.execute(sql)
 
-    conn.commit()
-    conn.close()
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.commit()
+        conn.close()
 
 
 def update_location(value, barcode):
     """ Updates the location in the database. """
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    sql = f"""
-    UPDATE currentcrop SET "Location" = {value}
-    WHERE "Barcode ID" = '{barcode}'
-    """
+    sql = f"""UPDATE currentcrop SET 'Location' = {value} WHERE 'Barcode ID' = '{barcode}'"""
 
-    cursor.execute(sql)
+    try:
+        cursor.execute(sql)
 
-    conn.commit()
-    conn.close()
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.commit()
+        conn.close()
 
 
 def update_notes(value, barcode):
     """ Updates the notes in the database. """
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    sql = f"""
-        UPDATE currentcrop SET "Notes" = {value}
-        WHERE "Barcode ID" = '{barcode}'
-    """
+    sql = f"""UPDATE currentcrop SET 'Notes' = {value} WHERE 'Barcode ID' = '{barcode}'"""
 
-    cursor.execute(sql)
+    try:
+        cursor.execute(sql)
 
-    conn.commit()
-    conn.close()
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.commit()
+        conn.close()
 
 
 def update_germ(value, barcode):
     """ Updates the germ in the database. """
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    sql = f"""
-        UPDATE currentcrop SET "Germ %" = {value}
-        WHERE "Barcode ID" = '{barcode}'
-    """
+    sql = f"""UPDATE currentcrop SET 'Germ %' = {value} WHERE 'Barcode ID' = '{barcode}'"""
 
-    cursor.execute(sql)
+    try:
+        cursor.execute(sql)
 
-    conn.commit()
-    conn.close()
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.commit()
+        conn.close()
 
 
 def update_tkw(value, barcode):
     """ Updates the tkw in the database. """
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    sql = f"""
-        UPDATE currentcrop SET "TKW (g)" = {value}
-        WHERE "Barcode ID" = '{barcode}'
-    """
+    sql = f"""UPDATE currentcrop SET 'TKW (g)' = {value} WHERE 'Barcode ID' = '{barcode}'"""
 
-    cursor.execute(sql)
+    try:
+        cursor.execute(sql)
 
-    conn.commit()
-    conn.close()
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.commit()
+        conn.close()
 
 
 def update_date(value, barcode):
     """ Updates the date to the current date in the database. """
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    sql = f"""
-        UPDATE currentcrop SET "Date Edited" = {value}
-        WHERE "Barcode ID" = '{barcode}'
-    """
+    sql = f"""UPDATE currentcrop SET 'Date Edited' = {value} WHERE 'Barcode ID' = '{barcode}'"""
 
-    cursor.execute(sql)
+    try:
+        cursor.execute(sql)
 
-    conn.commit()
-    conn.close()
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.commit()
+        conn.close()
 
 
 def max_variety_id():
     """ Finds the max variety id and adds one. """
     conn = create_connection(relative_to_assets(currentdb))
-
     cursor = conn.cursor()
 
-    sql = """
-        SELECT MAX("Variety ID") FROM currentcrop
-    """
+    sql = f"""SELECT MAX('Variety ID') FROM currentcrop"""
 
-    cursor.execute(sql)
+    try:
+        cursor.execute(sql)
+        result = cursor.fetchall()
 
-    result = cursor.fetchall()
-    conn.close()
 
-    for i in result:
-        return i
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.close()
+        for i in result:
+            return i
 
 
 def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
@@ -192,48 +204,42 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
     cursor1 = conn1.cursor()
     cursor2 = conn2.cursor()
 
-    sql1 = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-
-    sql2 = """INSERT INTO archivecrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
+    sql1 = f"""INSERT INTO currentcrop ('Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)', 'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    sql2 = f"""INSERT INTO archivecrop ('Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)', 'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
+
     try:
         cursor1.execute(sql1, record)
         cursor2.execute(sql2, record)
-
         conn1.commit()
         conn2.commit()
+
     except sql.Error as er:
         print('SQLite error: %s' % (' '.join(er.args)))
         print("Exception class is: ", er.__class__)
         print('SQLite traceback: ')
         exc_type, exc_value, exc_tb = sys.exc_info()
         print(traceback.format_exception(exc_type, exc_value, exc_tb))
-    conn1.close()
-    conn2.close()
+
+    finally:
+        conn1.close()
+        conn2.close()
 
 
 def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add an entry to the archive when a change is made. """
     conn = create_connection(relative_to_assets(archivedb))
-
     cursor = conn.cursor()
 
-    sql = """INSERT INTO archivecrop ("Barcode ID", "Variety ID", Variety, Crop, Source, "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", Location, "Designation / Project", Entrant, Notes, "Date Edited")
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
+    sql = f"""INSERT INTO archivecrop ('Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)', 'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
 
     try:
         cursor.execute(sql, record)
-
         conn.commit()
 
     except sql.Error as er:
@@ -242,19 +248,18 @@ def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity
         print('SQLite traceback: ')
         exc_type, exc_value, exc_tb = sys.exc_info()
         print(traceback.format_exception(exc_type, exc_value, exc_tb))
-    conn.close()
+
+    finally:
+        conn.close()
 
 
 def sql_to_datafrome():
     """ Take the archive database and return a dataframe. """
     conn = create_connection(relative_to_assets(currentdb))
 
-    sql_query = pd.read_sql_query(
-        """
-    SELECT * FROM currentcrop
-    """,
-        conn
-    )
+    sql = f"""SELECT * FROM currentcrop"""
+    sql_query = pd.read_sql_query(sql, conn)
+
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
 
@@ -266,12 +271,10 @@ def sql_history_dataframe(barcode):
     """ Return a dataframe of a specific barcode in archive. """
     conn = create_connection(relative_to_assets(archivedb))
 
-    sql = pd.read_sql_query(
-        f"""
-        SELECT * FROM archivecrop WHERE "Barcode ID" = '{barcode}'
-    """, conn
-    )
-    df = pd.DataFrame(sql, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
+    sql = f"""SELECT * FROM archivecrop WHERE 'Barcode ID' = '{barcode}'"""
+    sql_query = pd.read_sql_query(sql, conn)
+
+    df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
 
     conn.close()
