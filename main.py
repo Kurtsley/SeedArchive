@@ -999,9 +999,7 @@ class MainMenuBar(tk.Menu):
         tk.Menu.__init__(self, master)
         filemenu = tk.Menu(self, tearoff=False)
 
-        # TODO Need to add a version popup.
         self.add_cascade(label="File", underline=0, menu=filemenu)
-        # TODO
 
         filemenu.add_command(label="About", command=self.about)
         filemenu.add_separator()
