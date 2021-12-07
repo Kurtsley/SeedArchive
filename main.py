@@ -1941,10 +1941,14 @@ class TableView(object):
         self.lbl_crop = tk.Label(self.frm1, text="Select Crop")
         self.lbl_crop.pack(side=TOP)
 
+        # !####################################################################
+        # ! Bug - Scrollbar fills the entire bottom of the screen and throws
+        # ! errors every time it moves?????
         self.scrollx = ttk.Scrollbar(self.master, orient=HORIZONTAL)
         self.scrollx.configure(command=self.tree.xview)
         self.tree.configure(xscrollcommand=self.tree.set)
         self.scrollx.pack(side='bottom', fill='x')
+        # !####################################################################
 
         self.tree["columns"] = columns
         self.tree.pack(expand=True, fill=BOTH)
