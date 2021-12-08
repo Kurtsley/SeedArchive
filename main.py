@@ -16,15 +16,23 @@ import pandas as pd
 from tkinter import ttk
 import sys
 import traceback
+from docx import *
+import os
+
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+DATA_PATH = OUTPUT_PATH / Path("./data")
 
 program_version = "0.1.0"
 
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
+
+
+def relative_to_data(path: str) -> Path:
+    return DATA_PATH / Path(path)
 
 
 # Global database variables
@@ -64,7 +72,7 @@ def select_by_barcode(barcode=None):
         conn.close()
 
         for i in result:
-            return i    
+            return i
 
 
 def update_quantity(value, barcode):
@@ -74,7 +82,7 @@ def update_quantity(value, barcode):
 
     sql = f"""UPDATE currentcrop SET 'Quantity (g)' = {round(value, 2)} WHERE 'Barcode ID' = '{barcode}'"""
 
-    try:    
+    try:
         cursor.execute(sql)
 
     except sql.Error as e:
@@ -186,7 +194,6 @@ def max_variety_id():
         cursor.execute(sql)
         result = cursor.fetchall()
 
-
     except sql.Error as e:
         print(e)
 
@@ -266,6 +273,8 @@ def sql_to_datafrome():
     conn.close()
     return df
 
+# ! BUG - Broken ##############################################################
+
 
 def sql_history_dataframe(barcode):
     """ Return a dataframe of a specific barcode in archive. """
@@ -276,6 +285,7 @@ def sql_history_dataframe(barcode):
 
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+# !############################################################################
 
     conn.close()
     return df
@@ -663,7 +673,7 @@ class MainMenu(tk.Frame):
         )
         self.but_history.place(
             x=43,
-            y=146,
+            y=124,
             width=117,
             height=40
         )
@@ -813,6 +823,24 @@ class MainMenu(tk.Frame):
             x=874,
             y=902,
             width=61,
+            height=40
+        )
+
+        # Export to word button
+        self.but_image_8 = tk.PhotoImage(
+            file=relative_to_assets('Export.png')
+        )
+        self.but_export = tk.Button(
+            image=self.but_image_8,
+            border=0,
+            highlightthickness=0,
+            command=self.word_export,
+            relief='flat'
+        )
+        self.but_export.place(
+            x=43,
+            y=178,
+            width=117,
             height=40
         )
 
@@ -992,7 +1020,16 @@ class MainMenu(tk.Frame):
 
     def open_history(self):
         barcode = self.text_barcode.get()
+        print(barcode)
         HistoryView(self, barcode).show()
+
+    def word_export(self):
+        """ Export the barcode to a word file. """
+        barcode = self.text_barcode.get()
+        document = Document()
+        document.add_paragraph(str(barcode))
+        document.save(relative_to_data('tmp.docx'))
+        os.startfile(relative_to_data('tmp.docx'))
 
 
 class MainMenuBar(tk.Menu):
@@ -1004,9 +1041,14 @@ class MainMenuBar(tk.Menu):
 
         self.add_cascade(label="File", underline=0, menu=filemenu)
 
+        filemenu.add_command(label="Export Barcode", command=self.export)
         filemenu.add_command(label="About", command=self.about)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.close)
+
+    def export(self):
+        """ Exports a barcode to word. """
+        pass
 
     def about(self):
         """ Version info popup. """
