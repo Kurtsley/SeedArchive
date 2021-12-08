@@ -260,11 +260,25 @@ def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity
         conn.close()
 
 
-def sql_to_datafrome():
-    """ Take the archive database and return a dataframe. """
+def sql_to_dataframe():
+    """ Take the current database and return a dataframe. """
     conn = create_connection(relative_to_assets(currentdb))
 
     sql = f"""SELECT * FROM currentcrop"""
+    sql_query = pd.read_sql_query(sql, conn)
+
+    df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
+                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+
+    conn.close()
+    return df
+
+
+def sql_to_dataframe_recent():
+    """ Take the current database and return a dataframe with the latest 10 entries only """
+    conn = create_connection(relative_to_assets(currentdb))
+
+    sql = f"""SELECT * FROM currentcrop ORDER BY "Date Edited" LIMIT 10"""
     sql_query = pd.read_sql_query(sql, conn)
 
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
@@ -1964,7 +1978,7 @@ class TableView(object):
         self.master.resizable(False, False)
         self.master.state("zoomed")
 
-        self.df = sql_to_datafrome()
+        self.df = sql_to_dataframe()
         self.df["Variety ID"] = self.df["Variety ID"].fillna(0).astype(int)
 
         self.tree = ttk.Treeview(self.master)
