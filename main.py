@@ -273,19 +273,18 @@ def sql_to_datafrome():
     conn.close()
     return df
 
-# ! BUG - Broken ##############################################################
-
 
 def sql_history_dataframe(barcode):
     """ Return a dataframe of a specific barcode in archive. """
     conn = create_connection(relative_to_assets(archivedb))
 
-    sql = f"""SELECT * FROM archivecrop WHERE 'Barcode ID' = '{barcode}' ORDER BY 'Date Edited' DESC"""
-    sql_query = pd.read_sql_query(sql, conn)
-
-    df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
+    sql = pd.read_sql_query(
+        f"""
+        SELECT * FROM archivecrop WHERE "Barcode ID" = '{barcode}' ORDER BY "Date Edited" DESC
+    """, conn
+    )
+    df = pd.DataFrame(sql, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
-# !############################################################################
 
     conn.close()
     return df
