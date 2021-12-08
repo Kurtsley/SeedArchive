@@ -285,6 +285,7 @@ def sql_to_dataframe_recent():
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
 
     conn.close()
+    print(df)
     return df
 
 
@@ -1053,14 +1054,10 @@ class MainMenuBar(tk.Menu):
 
         self.add_cascade(label="File", underline=0, menu=filemenu)
 
-        filemenu.add_command(label="Export Barcode", command=self.export)
+        filemenu.add_command(label="Recent Barcodes", command=None)
         filemenu.add_command(label="About", command=self.about)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.close)
-
-    def export(self):
-        """ Exports a barcode to word. """
-        pass
 
     def about(self):
         """ Version info popup. """
