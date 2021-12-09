@@ -495,6 +495,16 @@ class MainMenu(tk.Frame):
             font=(None, 24),
             justify='center'
         )
+        self.lbl_barcode.focus_force()
+        #
+        # This focuses the cursor on the barcode entry at the start of the
+        # program.
+
+        self.lbl_barcode.bind('<Return>', self.get_barcode)
+        #
+        # Binds the return key to the get_barcode function which is the same as
+        # the scan button.
+
         self.lbl_barcode.place(
             x=459,
             y=134,
@@ -1009,13 +1019,26 @@ class MainMenu(tk.Frame):
         except Exception:
             pass
 
-    def get_barcode(self):
+    def clear_barcode(self):
+        """ Clear the barcode entry. """
+        self.lbl_barcode.delete(0, END)
+
+    def get_barcode(self, event=None):
         """ Get the barcode scan from the scanner. """
         try:
-            value = BarcodePopup(self).show()
+            value = self.lbl_barcode.get()
             value = value.strip()
             self.text_barcode.set(value)
+            #
+            # This is necessary in case the barcode has any space around it
+            # when scanned. It is present in the excel file so this is a
+            # precaution.
+
+            # Update the entry widgets and then clear the barcode field for
+            # future scanning.
             self.update_labels()
+            self.clear_barcode()
+
         except Exception:
             pass
 
@@ -1030,7 +1053,6 @@ class MainMenu(tk.Frame):
 
     def open_history(self):
         barcode = self.text_barcode.get()
-        print(barcode)
         HistoryView(self, barcode).show()
 
     def word_export(self):
@@ -1333,56 +1355,6 @@ class GermTKWChangePopup(object):
         self.master.wait_window()
         value = self.text_germ_change.get()
         return float(value)
-
-
-class BarcodePopup(object):
-    """ Germ edit window. """
-
-    def __init__(self, master):
-        self.master = tk.Toplevel(master)
-        self.master.title("Scan")
-        self.master.grab_set()
-        self.master.focus_force()
-        self.master.resizable(False, False)
-
-        self.text_barcode = tk.StringVar()
-
-        frm1 = tk.Frame(self.master, padx=5, pady=5)
-        frm1.grid(row=0, column=1)
-
-        lbl = tk.Label(frm1, text="Scan barcode now:", pady=5,
-                       padx=5).pack()
-
-        frm2 = tk.Frame(self.master, padx=5, pady=5)
-        frm2.grid(row=0, column=2)
-
-        entry = tk.Entry(frm2, justify='center',
-                         width=20, textvariable=self.text_barcode)
-        entry.pack(pady=10, padx=5)
-        entry.focus()
-        entry.bind('<Return>', self.close)
-
-        btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
-            row=1, columnspan=5, pady=5)
-
-    def close(self, event=None):
-        self.master.destroy()
-
-    def show(self):
-        """ Show the quantity window and return the grams to remove. """
-        sw = self.master.winfo_screenwidth()
-        sh = self.master.winfo_screenheight()
-        w = 350
-        h = 90
-        x = (sw / 2) - (w / 2)
-        y = (sh / 2) - (h / 2)
-        self.master.geometry("%dx%d+%d+%d" % (w, h, x, y))
-        self.master.attributes('-topmost', True)
-
-        self.master.deiconify()
-        self.master.wait_window()
-        value = self.text_barcode.get()
-        return value
 
 
 class EntryMenu(object):
@@ -1790,6 +1762,7 @@ class EntryMenu(object):
             fill="#C4C4C4",
             outline="")
 
+        # Accept button
         self.button_image_1 = tk.PhotoImage(
             file=relative_to_assets(("accept.png")))
         self.but_accept = tk.Button(
@@ -1797,9 +1770,10 @@ class EntryMenu(object):
             image=self.button_image_1,
             borderwidth=0,
             highlightthickness=0,
-            command=self.master.destroy,
+            command=lambda: [self.set_barcode(), self.master.destroy()],
             relief="flat"
         )
+
         self.but_accept.image = self.button_image_1
         self.but_accept.place(
             x=845.0,
@@ -1838,7 +1812,6 @@ class EntryMenu(object):
             short_year = "UK"
         else:
             short_year = str(year_rcv[1:])
-        print(str(year_rcv[1:]))
 
         # Build barcode
         barcode = f"{varietyid}-{crop_sort}-{source_sort}-{short_year}"
@@ -1945,24 +1918,28 @@ class EntryMenu(object):
         self.master.wait_window()
         values = self.return_all()
 
-        # Seperate the list by value
-        barcode = values[0]
-        date = values[1]
-        varietyid = values[2]
-        varietyname = values[3]
-        year = values[4]
-        quantity = values[5]
-        tkw = values[6]
-        germ = values[7]
-        entrant = values[8]
-        notes = values[9]
-        location = values[10]
-        crop = values[11]
-        source = values[12]
-        designation = values[13]
+        # Check for an emtpy barcode and pass if true.
+        if values[0] == "":
+            pass
+        else:
+            # Seperate the list by value
+            barcode = values[0]
+            date = values[1]
+            varietyid = values[2]
+            varietyname = values[3]
+            year = values[4]
+            quantity = values[5]
+            tkw = values[6]
+            germ = values[7]
+            entrant = values[8]
+            notes = values[9]
+            location = values[10]
+            crop = values[11]
+            source = values[12]
+            designation = values[13]
 
-        add_entry(barcode, varietyid, varietyname, crop, source, year,
-                  quantity, germ, tkw, location, designation, entrant, notes, date)
+            add_entry(barcode, varietyid, varietyname, crop, source, year,
+                      quantity, germ, tkw, location, designation, entrant, notes, date)
 
 
 class TableView(object):
