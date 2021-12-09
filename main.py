@@ -263,7 +263,7 @@ def sql_to_dataframe():
     """ Take the current database and return a dataframe. """
     conn = create_connection(relative_to_assets(currentdb))
 
-    sql = f"""SELECT * FROM currentcrop ORDER BY "Date Edited" DESC"""
+    sql = f"""SELECT * FROM currentcrop ORDER BY "Year (rcv)" DESC"""
     sql_query = pd.read_sql_query(sql, conn)
 
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
