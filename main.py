@@ -78,7 +78,7 @@ def update_quantity(value, barcode):
     conn = create_connection(relative_to_assets(currentdb))
     cursor = conn.cursor()
 
-    sql = f"""UPDATE currentcrop SET "Quantity (g)" = '{round(value, 2)}' WHERE "Barcode ID" = '{barcode}'"""
+    sql = f"""UPDATE currentcrop SET "Quantity (g)" = {round(value, 2)} WHERE "Barcode ID" = '{barcode}'"""
 
     try:
         cursor.execute(sql)
@@ -929,7 +929,6 @@ class MainMenu(tk.Frame):
         """ Sets the edited date to current date. """
         today = date.today()
         dateformat = today.strftime('%m/%d/%Y')
-        dateformat = f'"{dateformat}"'
         barcode = self.text_barcode.get()
         update_date(dateformat, barcode)
         self.text_date.set(self.show_results(13))
@@ -966,7 +965,6 @@ class MainMenu(tk.Frame):
         """ Change the location field. """
         try:
             value = LocationChangePopup(self).show()
-            value = f'"{value}"'
 
             barcode = self.text_barcode.get()
             update_location(value, barcode)
@@ -1551,7 +1549,7 @@ class EntryMenu(object):
         self.locations = ('Cabinet 1 / Shelf 1', 'Cabinet 1 / Shelf 2', 'Cabinet 1 / Shelf 3', 'Cabinet 1 / Shelf 4', 'Cabinet 1 / Shelf 5', 'Cabinet 2 / Shelf 1', 'Cabinet 2 / Shelf 2', 'Cabinet 2 / Shelf 3', 'Cabinet 2 / Shelf 4', 'Cabinet 2 / Shelf 5', 'Cabinet 3 / Shelf 1', 'Cabinet 3 / Shelf 2', 'Cabinet 3 / Shelf 3', 'Cabinet 3 / Shelf 4', 'Cabinet 3 / Shelf 5', 'Cabinet 4 / Shelf 1', 'Cabinet 4 / Shelf 2', 'Cabinet 4 / Shelf 3', 'Cabinet 4 / Shelf 4',
                           'Cabinet 4 / Shelf 5', 'Cabinet 5 / Shelf 1', 'Cabinet 5 / Shelf 2', 'Cabinet 5 / Shelf 3', 'Cabinet 5 / Shelf 4', 'Cabinet 5 / Shelf 5', 'Cabinet 6 / Shelf 1', 'Cabinet 6 / Shelf 2', 'Cabinet 6 / Shelf 3', 'Cabinet 6 / Shelf 4', 'Cabinet 6 / Shelf 5', 'Cabinet 7 / Shelf 1', 'Cabinet 7 / Shelf 2', 'Cabinet 7 / Shelf 3', 'Cabinet 7 / Shelf 4', 'Cabinet 7 / Shelf 5', 'Cabinet 8 / Shelf 1', 'Cabinet 8 / Shelf 2', 'Cabinet 8 / Shelf 3', 'Cabinet 8 / Shelf 4', 'Cabinet 8 / Shelf 5', 'Cabinet 9 / Shelf 1', 'Cabinet 9 / Shelf 2', 'Cabinet 9 / Shelf 3', 'Cabinet 9 / Shelf 4', 'Cabinet 9 / Shelf 5', 'Cabinet 10 / Shelf 1', 'Cabinet 10 / Shelf 2', 'Cabinet 10 / Shelf 3', 'Cabinet 10 / Shelf 4', 'Cabinet 10 / Shelf 5', 'Cabinet 11 / Shelf 1', 'Cabinet 11 / Shelf 2', 'Cabinet 11 / Shelf 3', 'Cabinet 11 / Shelf 4', 'Cabinet 11 / Shelf 5', 'Open Shelf 1 / Shelf 1', 'Open Shelf 1 / Shelf 2', 'Open Shelf 1 / Shelf 3', 'Open Shelf 1 / Shelf 4', 'Open Shelf 2 / Shelf 1', 'Open Shelf 2 / Shelf 2', 'Open Shelf 2 / Shelf 3', 'Open Shelf 2 / Shelf 4', 'Open Shelf 2 / Shelf 5', 'Cart', 'THROWN OUT')
         self.crops = ('Alfalfa', 'Barley', 'RR Canola', 'Carinata', 'Corn', 'Dry Bean', 'Faba Bean', 'Field Pea', 'Flax', 'Lentil', 'Millet', 'Oat', 'Onion',
-                      'Perenial Grass', 'Safflower', 'RR Soybean', 'Sunflower', 'Wheat, Durum', 'Wheat, Spring', 'Wheat, Winter', 'Conv Soybean', 'Conv Conola', 'Chickpea')
+                      'Perenial Grass', 'Safflower', 'RR Soybean', 'Sunflower', 'Wheat, Durum', 'Wheat, Spring', 'Wheat, Winter', 'Conv Soybean', 'Conv Canola', 'Chickpea')
         self.sources = ('Drill Strip', 'Breeder / University',
                         'Company', 'Seed Increase', 'Other')
         self.designations = ('Border Seed', 'Dryland - Agronomic Trial', 'Dryland - Drill Strip', 'Dryland - Variety Trial',
@@ -1738,7 +1736,7 @@ class EntryMenu(object):
             self.master,
             self.designation_var,
             *self.designations,
-            command=None
+            command=self.set_barcode
         )
         self.lbl_designation.config(font=(None, 18))
         self.lbl_designation.place(
@@ -1835,9 +1833,12 @@ class EntryMenu(object):
         source = self.source_var.get()
         source_sort = self.sort_source(source)
 
-        # Shorten year
-        year = str(date.today().year)
-        short_year = year[1:]
+        year_rcv = self.text_year.get()
+        if year_rcv == "":
+            short_year = "UK"
+        else:
+            short_year = str(year_rcv[1:])
+        print(str(year_rcv[1:]))
 
         # Build barcode
         barcode = f"{varietyid}-{crop_sort}-{source_sort}-{short_year}"
