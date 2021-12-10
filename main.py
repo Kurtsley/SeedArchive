@@ -491,6 +491,15 @@ class MainMenu(tk.Frame):
             font=("Roboto Bold", 24 * -1)
         )
 
+        self.canvas.create_text(
+            540,
+            220,
+            anchor='nw',
+            text="Current Barcode",
+            fill="#000000",
+            font=("Roboto Bold", 16 * -1)
+        )
+
         # Creating labels
 
         self.lbl_barcode = tk.Entry(
@@ -516,18 +525,20 @@ class MainMenu(tk.Frame):
             height=65
         )
 
-        # Hidden label for barcode retrieval
+        # Label for barcode viewing and retrieval
         self.lbl_barcode_hidden = tk.Entry(
             textvariable=self.text_barcode_hidden,
+            relief='raised',
+            font=(None, 14),
+            justify='center'
         )
         self.lbl_barcode_hidden.place(
-            x=459,
-            y=134,
-            width=50,
-            height=30
+            x=666,
+            y=213,
+            width=255,
+            height=34
         )
         self.lbl_barcode_hidden.bind('<Return>', self.get_barcode)
-        self.lbl_barcode_hidden.lower()
 
         self.lbl_variety_id = tk.Label(
             textvariable=self.text_variety_id,
