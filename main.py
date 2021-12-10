@@ -318,6 +318,7 @@ class MainMenu(tk.Frame):
         # Setting up StringVar variables for updating labels
 
         self.text_barcode = tk.StringVar()
+        self.text_barcode_hidden = tk.StringVar()
         self.text_variety_id = tk.StringVar()
         self.text_variety_name = tk.StringVar()
         self.text_location = tk.StringVar()
@@ -511,6 +512,19 @@ class MainMenu(tk.Frame):
             width=493,
             height=65
         )
+
+        # Hidden label for barcode retrieval
+        self.lbl_barcode_hidden = tk.Entry(
+            textvariable=self.text_barcode_hidden,
+        )
+        self.lbl_barcode_hidden.place(
+            x=459,
+            y=134,
+            width=50,
+            height=30
+        )
+        self.lbl_barcode_hidden.bind('<Return>', self.get_barcode)
+        self.lbl_barcode_hidden.lower()
 
         self.lbl_variety_id = tk.Label(
             textvariable=self.text_variety_id,
@@ -868,6 +882,7 @@ class MainMenu(tk.Frame):
 
     def update_labels(self):
         self.text_barcode.set(self.show_results(0))
+        self.text_barcode_hidden.set(self.show_results(0))
         self.text_variety_id.set(self.show_results(1))
         self.text_variety_name.set(
             self.show_results(2))
@@ -887,7 +902,7 @@ class MainMenu(tk.Frame):
     def archive_on_update(self):
         """ Retrieve all the text for archiving purposes. """
         try:
-            barcode = self.text_barcode.get()
+            barcode = self.text_barcode_hidden.get()
             varietyid = self.text_variety_id.get()
             varietyname = self.text_variety_name.get()
             crop = self.text_crop.get()
@@ -928,7 +943,7 @@ class MainMenu(tk.Frame):
     def show_results(self, label_num):
         """ Shows the results in the labels. """
 
-        input = self.lbl_barcode.get()
+        input = self.lbl_barcode_hidden.get()
         list = select_by_barcode(f"{input}")
         if list[label_num] is None:
             return "NA"
@@ -939,7 +954,7 @@ class MainMenu(tk.Frame):
         """ Sets the edited date to current date. """
         today = date.today()
         dateformat = today.strftime('%m/%d/%Y')
-        barcode = self.text_barcode.get()
+        barcode = self.text_barcode_hidden.get()
         update_date(dateformat, barcode)
         self.text_date.set(self.show_results(13))
 
@@ -949,7 +964,7 @@ class MainMenu(tk.Frame):
             value = QuantityPopupAdd(self).show()
             original = self.text_quantity.get()
             new = float(original) + value
-            barcode = self.text_barcode.get()
+            barcode = self.text_barcode_hidden.get()
             update_quantity(new, barcode)
             self.current_date()
             self.text_quantity.set(float(self.show_results(6)))
@@ -964,7 +979,7 @@ class MainMenu(tk.Frame):
             original = self.text_quantity.get()
             new = float(original) - value
 
-            barcode = self.text_barcode.get()
+            barcode = self.text_barcode_hidden.get()
             update_quantity(new, barcode)
             self.current_date()
             self.text_quantity.set(float(self.show_results(6)))
@@ -976,7 +991,7 @@ class MainMenu(tk.Frame):
         try:
             value = LocationChangePopup(self).show()
 
-            barcode = self.text_barcode.get()
+            barcode = self.text_barcode_hidden.get()
             update_location(value, barcode)
             self.current_date()
             self.text_location.set(self.show_results(9))
@@ -987,9 +1002,8 @@ class MainMenu(tk.Frame):
         """ Change the notes field. """
         try:
             value = NotesChangePopup(self).show()
-            value = f'"{value}"'
 
-            barcode = self.text_barcode.get()
+            barcode = self.text_barcode_hidden.get()
             update_notes(value, barcode)
             self.current_date()
             self.text_notes.set(self.show_results(12))
@@ -1001,7 +1015,7 @@ class MainMenu(tk.Frame):
         try:
             value = GermTKWChangePopup(self).show()
 
-            barcode = self.text_barcode.get()
+            barcode = self.text_barcode_hidden.get()
             update_germ(value, barcode)
             self.current_date()
             self.text_germ.set(float(self.show_results(7)))
@@ -1012,7 +1026,7 @@ class MainMenu(tk.Frame):
         """ Change the tkw field. """
         try:
             value = GermTKWChangePopup(self).show()
-            barcode = self.text_barcode.get()
+            barcode = self.text_barcode_hidden.get()
             update_tkw(value, barcode)
             self.current_date()
             self.text_tkw.set(float(self.show_results(8)))
@@ -1029,6 +1043,7 @@ class MainMenu(tk.Frame):
             value = self.lbl_barcode.get()
             value = value.strip()
             self.text_barcode.set(value)
+            self.text_barcode_hidden.set(value)
             #
             # This is necessary in case the barcode has any space around it
             # when scanned. It is present in the excel file so this is a
@@ -1052,12 +1067,12 @@ class MainMenu(tk.Frame):
         TableView(self).show()
 
     def open_history(self):
-        barcode = self.text_barcode.get()
+        barcode = self.text_barcode_hidden.get()
         HistoryView(self, barcode).show()
 
     def word_export(self):
         """ Export the barcode to a word file. """
-        barcode = self.text_barcode.get()
+        barcode = self.text_barcode_hidden.get()
         document = Document()
         document.add_paragraph(str(barcode))
         document.save(relative_to_data('tmp.docx'))
