@@ -24,7 +24,7 @@ OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
 
-program_version = "0.1.0"
+program_version = "0.1.6"
 
 
 def relative_to_assets(path: str) -> Path:
