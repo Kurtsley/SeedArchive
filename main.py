@@ -38,8 +38,8 @@ def relative_to_data(path: str) -> Path:
 
 
 # Global database variables
-currentdb = relative_to_assets("currentcrops.db")
-archivedb = relative_to_assets("archivecrops.db")
+currentdb = relative_to_data("currentcrops.db")
+archivedb = relative_to_data("archivecrops.db")
 
 
 def create_connection(db_file):
@@ -56,7 +56,7 @@ def create_connection(db_file):
 
 def select_by_barcode(barcode=None):
     """ Sort by barcode. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""SELECT * FROM currentcrop WHERE "Barcode ID" = '{barcode}'"""
@@ -77,7 +77,7 @@ def select_by_barcode(barcode=None):
 
 def update_quantity(value, barcode):
     """ Updates the quantity in the database. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Quantity (g)" = {round(value, 2)} WHERE "Barcode ID" = '{barcode}'"""
@@ -95,7 +95,7 @@ def update_quantity(value, barcode):
 
 def update_location(value, barcode):
     """ Updates the location in the database. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Location" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -113,7 +113,7 @@ def update_location(value, barcode):
 
 def update_notes(value, barcode):
     """ Updates the notes in the database. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Notes" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -131,7 +131,7 @@ def update_notes(value, barcode):
 
 def update_germ(value, barcode):
     """ Updates the germ in the database. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Germ %" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -149,7 +149,7 @@ def update_germ(value, barcode):
 
 def update_tkw(value, barcode):
     """ Updates the tkw in the database. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "TKW (g)" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -167,7 +167,7 @@ def update_tkw(value, barcode):
 
 def update_date(value, barcode):
     """ Updates the date to the current date in the database. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Date Edited" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -185,7 +185,7 @@ def update_date(value, barcode):
 
 def max_variety_id():
     """ Finds the max variety id and adds one. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = f"""SELECT MAX("Variety ID") FROM currentcrop"""
@@ -206,8 +206,8 @@ def max_variety_id():
 
 def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add a new row to the database. """
-    conn1 = create_connection(relative_to_assets(currentdb))
-    conn2 = create_connection(relative_to_assets(archivedb))
+    conn1 = create_connection(relative_to_data(currentdb))
+    conn2 = create_connection(relative_to_data(archivedb))
 
     cursor1 = conn1.cursor()
     cursor2 = conn2.cursor()
@@ -238,7 +238,7 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
 
 def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add an entry to the archive when a change is made. """
-    conn = create_connection(relative_to_assets(archivedb))
+    conn = create_connection(relative_to_data(archivedb))
     cursor = conn.cursor()
 
     sql = f"""INSERT INTO archivecrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -263,7 +263,7 @@ def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity
 
 def sql_to_dataframe():
     """ Take the current database and return a dataframe. """
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
 
     sql = f"""SELECT * FROM currentcrop ORDER BY "Year (rcv)" DESC"""
     sql_query = pd.read_sql_query(sql, conn)
@@ -276,7 +276,7 @@ def sql_to_dataframe():
 
 
 def sql_recent_list():
-    conn = create_connection(relative_to_assets(currentdb))
+    conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
     sql = """ SELECT "Barcode ID" FROM currentcrop ORDER BY "Date Edited" DESC LIMIT 10 """
@@ -295,7 +295,7 @@ def sql_recent_list():
 
 def sql_history_dataframe(barcode):
     """ Return a dataframe of a specific barcode in archive. """
-    conn = create_connection(relative_to_assets(archivedb))
+    conn = create_connection(relative_to_data(archivedb))
 
     sql = f"""SELECT * FROM archivecrop WHERE "Barcode ID" = '{barcode}' ORDER BY "Date Edited" DESC"""
     sql_query = pd.read_sql_query(sql, conn)
@@ -1148,6 +1148,8 @@ class AboutPopup(object):
         self.master.focus_force()
         self.master.resizable(False, False)
 
+        self.master.bind('<Return>', self.close)
+
         self.lbl = tk.Label(
             self.master, text=f"SeedArchive v{program_version}\n2021 Beard Industries")
         self.lbl.place(relx=.5, rely=.3, anchor='center')
@@ -1156,7 +1158,7 @@ class AboutPopup(object):
                              width=7, height=2, text="OK", command=self.close)
         self.btn.pack(side="bottom", pady=5)
 
-    def close(self):
+    def close(self, event=None):
         self.master.destroy()
 
     def show(self):
@@ -1181,6 +1183,8 @@ class QuantityPopupAdd(object):
         self.master.focus_force()
         self.master.resizable(False, False)
 
+        self.master.bind('<Return>', self.close)
+
         self.text_quantity_remove = tk.StringVar()
 
         frm1 = tk.Frame(self.master, padx=5, pady=5)
@@ -1199,6 +1203,9 @@ class QuantityPopupAdd(object):
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
+
+    def close(self, event=None):
+        self.master.destroy()
 
     def show(self):
         """ Show the quantity window and return the grams to add or remove. """
@@ -1227,6 +1234,8 @@ class QuantityPopupRemove(object):
         self.master.focus_force()
         self.master.resizable(False, False)
 
+        self.master.bind('<Return>', self.close)
+
         self.text_quantity_remove = tk.StringVar()
 
         frm1 = tk.Frame(self.master, padx=5, pady=5)
@@ -1245,6 +1254,9 @@ class QuantityPopupRemove(object):
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
+
+    def close(self, event=None):
+        self.master.destroy()
 
     def show(self):
         """ Show the quantity window and return the grams to remove. """
@@ -1273,6 +1285,8 @@ class LocationChangePopup(object):
         self.master.focus_force()
         self.master.resizable(False, False)
 
+        self.master.bind('<Return>', self.close)
+
         self.location_change = tk.StringVar()
 
         self.locations = ('Cabinet 1 / Shelf 1', 'Cabinet 1 / Shelf 2', 'Cabinet 1 / Shelf 3', 'Cabinet 1 / Shelf 4', 'Cabinet 1 / Shelf 5', 'Cabinet 2 / Shelf 1', 'Cabinet 2 / Shelf 2', 'Cabinet 2 / Shelf 3', 'Cabinet 2 / Shelf 4', 'Cabinet 2 / Shelf 5', 'Cabinet 3 / Shelf 1', 'Cabinet 3 / Shelf 2', 'Cabinet 3 / Shelf 3', 'Cabinet 3 / Shelf 4', 'Cabinet 3 / Shelf 5', 'Cabinet 4 / Shelf 1', 'Cabinet 4 / Shelf 2', 'Cabinet 4 / Shelf 3', 'Cabinet 4 / Shelf 4',
@@ -1297,6 +1311,9 @@ class LocationChangePopup(object):
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
+
+    def close(self, event=None):
+        self.master.destroy()
 
     def show(self):
         """ Show the quantity window and return the grams to add or remove. """
@@ -1325,6 +1342,8 @@ class NotesChangePopup(object):
         self.master.focus_force()
         self.master.resizable(False, False)
 
+        self.master.bind('<Return>', self.close)
+
         self.text_notes = tk.StringVar()
 
         frm1 = tk.Frame(self.master, padx=5, pady=5)
@@ -1343,6 +1362,9 @@ class NotesChangePopup(object):
 
         btn = tk.Button(self.master, text="Accept", padx=10, command=self.master.destroy).grid(
             row=1, columnspan=5, pady=5)
+
+    def close(self, event=None):
+        self.master.destroy()
 
     def show(self):
         """ Show the quantity window and return the grams to add or remove. """
@@ -1371,6 +1393,8 @@ class GermTKWChangePopup(object):
         self.master.focus_force()
         self.master.resizable(False, False)
 
+        self.master.bind('<Return>', self.close)
+
         self.text_germ_change = tk.StringVar()
 
         frm1 = tk.Frame(self.master, padx=5, pady=5)
@@ -1390,6 +1414,9 @@ class GermTKWChangePopup(object):
         btn = tk.Button(self.master, text="Accept", padx=10,
                         command=self.master.destroy)
         btn.grid(row=1, column=2, columnspan=2)
+
+    def close(self, event=None):
+        self.master.destroy()
 
     def show(self):
         """ Show the quantity window and return the grams to remove. """
@@ -1414,6 +1441,8 @@ class EntryMenu(object):
         self.master.title("New Entry")
         self.master.grab_set()
         self.master.resizable(False, False)
+
+        self.master.bind('<Return>', self.set_barcode)
 
         self.canvas = tk.Canvas(
             self.master,
