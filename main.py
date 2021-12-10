@@ -273,19 +273,22 @@ def sql_to_dataframe():
     return df
 
 
-def sql_to_dataframe_recent():
-    """ Take the current database and return a dataframe with the latest 10 entries only """
+def sql_recent_list():
     conn = create_connection(relative_to_assets(currentdb))
+    cursor = conn.cursor()
 
-    sql = f"""SELECT * FROM currentcrop ORDER BY "Date Edited" LIMIT 10"""
-    sql_query = pd.read_sql_query(sql, conn)
+    sql = """ SELECT "Barcode ID" FROM currentcrop ORDER BY "Date Edited" DESC LIMIT 10 """
 
-    df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
-                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+    try:
+        cursor.execute(sql)
+        result = cursor.fetchall()
 
-    conn.close()
-    print(df)
-    return df
+    except sql.Error as e:
+        print(e)
+
+    finally:
+        conn.close()
+        return result
 
 
 def sql_history_dataframe(barcode):
@@ -937,7 +940,7 @@ class MainMenu(tk.Frame):
                 return "NA"
             else:
                 new_date = datetime.strptime(
-                    date, '%Y-%m-%d').strftime('%m/%d/%Y')
+                    date, '%Y-%m-%d').strftime('%Y-%m-%d')
                 return new_date
 
     def show_results(self, label_num):
@@ -953,7 +956,7 @@ class MainMenu(tk.Frame):
     def current_date(self):
         """ Sets the edited date to current date. """
         today = date.today()
-        dateformat = today.strftime('%m/%d/%Y')
+        dateformat = today.strftime('%Y-%m-%d')
         barcode = self.text_barcode_hidden.get()
         update_date(dateformat, barcode)
         self.text_date.set(self.show_results(13))
@@ -1078,6 +1081,10 @@ class MainMenu(tk.Frame):
         document.save(relative_to_data('tmp.docx'))
         os.startfile(relative_to_data('tmp.docx'))
 
+    def set_barcode(self, value):
+        """ Set the barcode for use in another class. """
+        self.text_barcode.set(value)
+
 
 class MainMenuBar(tk.Menu):
     """ Class for main menu bar. """
@@ -1085,13 +1092,29 @@ class MainMenuBar(tk.Menu):
     def __init__(self, master):
         tk.Menu.__init__(self, master)
         filemenu = tk.Menu(self, tearoff=False)
+        recentmenu = tk.Menu(self, tearoff=False)
+
+        list = sql_recent_list()
+
+        self.barcode_vars = tk.StringVar(value=list[0])
+
+        for x in list:
+            recentmenu.add_radiobutton(
+                label=x, value=x, variable=self.barcode_vars, command=self.select_barcode)
 
         self.add_cascade(label="File", underline=0, menu=filemenu)
 
-        filemenu.add_command(label="Recent Barcodes", command=None)
+        filemenu.add_cascade(label="Recent Barcodes", menu=recentmenu)
         filemenu.add_command(label="About", command=self.about)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.close)
+
+    def select_barcode(self):
+        """ Select the barcode from the recent menu. """
+        m = MainMenu(self.master)
+        m.set_barcode(self.barcode_vars.get())
+        m.get_barcode()
+        sql_recent_list()
 
     def about(self):
         """ Version info popup. """
