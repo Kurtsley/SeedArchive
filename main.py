@@ -25,7 +25,7 @@ ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
 
 # * ###########################################################################
-program_version = "0.1.6"  # * UPDATE THIS EVERY VERSION!!!!
+program_version = "0.1.7"  # * UPDATE THIS EVERY VERSION!!!!
 # * ###########################################################################
 
 
