@@ -1006,11 +1006,13 @@ class MainMenu(tk.Frame):
         """ Change the location field. """
         try:
             value = LocationChangePopup(self).show()
-
-            barcode = self.text_barcode_hidden.get()
-            update_location(value, barcode)
-            self.current_date()
-            self.text_location.set(self.show_results(9))
+            if value == "":
+                pass
+            else:
+                barcode = self.text_barcode_hidden.get()
+                update_location(value, barcode)
+                self.current_date()
+                self.text_location.set(self.show_results(9))
         except Exception:
             pass
 
@@ -1057,18 +1059,21 @@ class MainMenu(tk.Frame):
         """ Get the barcode scan from the scanner. """
         try:
             value = self.lbl_barcode.get()
-            value = value.strip()
-            self.text_barcode.set(value)
-            self.text_barcode_hidden.set(value)
-            #
-            # This is necessary in case the barcode has any space around it
-            # when scanned. It is present in the excel file so this is a
-            # precaution.
+            if value == "":
+                pass
+            else:
+                value = value.strip()
+                self.text_barcode.set(value)
+                self.text_barcode_hidden.set(value)
+                #
+                # This is necessary in case the barcode has any space around it
+                # when scanned. It is present in the excel file so this is a
+                # precaution.
 
-            # Update the entry widgets and then clear the barcode field for
-            # future scanning.
-            self.update_labels()
-            self.clear_barcode()
+                # Update the entry widgets and then clear the barcode field for
+                # future scanning.
+                self.update_labels()
+                self.clear_barcode()
 
         except Exception:
             pass
@@ -1304,7 +1309,7 @@ class LocationChangePopup(object):
         self.location_menu = tk.OptionMenu(
             frm2,
             self.location_change,
-            *self.locations,
+            * self.locations,
             command=None
         )
         self.location_menu.pack()
