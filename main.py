@@ -1114,7 +1114,7 @@ class MainMenuBar(tk.Menu):
 
         list = sql_recent_list()
 
-        self.barcode_vars = tk.StringVar(value=list[0])
+        self.barcode_vars = tk.StringVar()
 
         for x in list:
             recentmenu.add_radiobutton(
