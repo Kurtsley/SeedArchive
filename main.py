@@ -12,6 +12,7 @@ from pathlib import Path
 import sqlite3 as sql
 from tkinter import font
 from tkinter.constants import BOTH, BOTTOM, CENTER, E, END, HIDDEN, HORIZONTAL, N, S, TOP, W
+from numpy.core.fromnumeric import sort
 import pandas as pd
 from tkinter import ttk
 import sys
@@ -1013,11 +1014,13 @@ class MainMenu(tk.Frame):
         """ Change the location field. """
         try:
             value = LocationChangePopup(self).show()
-
-            barcode = self.text_barcode_hidden.get()
-            update_location(value, barcode)
-            self.current_date()
-            self.text_location.set(self.show_results(9))
+            if value == "":
+                pass
+            else:
+                barcode = self.text_barcode_hidden.get()
+                update_location(value, barcode)
+                self.current_date()
+                self.text_location.set(self.show_results(9))
         except Exception:
             pass
 
@@ -1064,18 +1067,21 @@ class MainMenu(tk.Frame):
         """ Get the barcode scan from the scanner. """
         try:
             value = self.lbl_barcode.get()
-            value = value.strip()
-            self.text_barcode.set(value)
-            self.text_barcode_hidden.set(value)
-            #
-            # This is necessary in case the barcode has any space around it
-            # when scanned. It is present in the excel file so this is a
-            # precaution.
+            if value == "":
+                pass
+            else:
+                value = value.strip()
+                self.text_barcode.set(value)
+                self.text_barcode_hidden.set(value)
+                #
+                # This is necessary in case the barcode has any space around it
+                # when scanned. It is present in the excel file so this is a
+                # precaution.
 
-            # Update the entry widgets and then clear the barcode field for
-            # future scanning.
-            self.update_labels()
-            self.clear_barcode()
+                # Update the entry widgets and then clear the barcode field for
+                # future scanning.
+                self.update_labels()
+                self.clear_barcode()
 
         except Exception:
             pass
@@ -1130,7 +1136,7 @@ class MainMenuBar(tk.Menu):
 
         list = sql_recent_list()
 
-        self.barcode_vars = tk.StringVar(value=list[0])
+        self.barcode_vars = tk.StringVar()
 
         for x in list:
             recentmenu.add_radiobutton(
@@ -1337,7 +1343,7 @@ class LocationChangePopup(object):
         self.location_menu = tk.OptionMenu(
             frm2,
             self.location_change,
-            *self.locations,
+            * self.locations,
             command=None
         )
         self.location_menu.pack()
@@ -2075,13 +2081,22 @@ class TableView(object):
         self.frm1 = tk.Frame(self.master)
         self.frm1.pack(side='left', anchor='nw', padx=5, pady=20)
 
-        self.combo_crop = ttk.Combobox(self.frm1, values=list(
-            self.df["Crop"].unique()), state='readonly')
-        self.combo_crop.pack(side=BOTTOM)
+        self.combo_crop = ttk.Combobox(self.frm1, values=sorted(list(
+            self.df["Crop"].unique())), state='readonly')
+        self.combo_crop.pack()
         self.combo_crop.bind("<<ComboboxSelected>>", self.select_crop)
 
-        self.lbl_crop = tk.Label(self.frm1, text="Select Crop")
+        self.combo_location = ttk.Combobox(self.frm1, values=sorted(list(
+            self.df["Location"].unique())), state='readonly')
+        self.combo_location.pack(side=BOTTOM)
+        self.combo_location.bind("<<ComboboxSelected>>", self.select_location)
+
+        self.lbl_crop = tk.Label(self.frm1, text="\u2191 Select Crop \u2191")
         self.lbl_crop.pack(side=TOP)
+
+        self.lbl_location = tk.Label(
+            self.frm1, text="\u2193 Select Location \u2193")
+        self.lbl_location.pack()
 
         # !####################################################################
         # ! Bug - Scrollbar fills the entire bottom of the screen and throws
@@ -2105,6 +2120,11 @@ class TableView(object):
     def select_crop(self, event=None):
         self.tree.delete(*self.tree.get_children())
         for index, row in self.df.loc[self.df["Crop"].eq(self.combo_crop.get())].iterrows():
+            self.tree.insert("", "end", text=index, values=list(row))
+
+    def select_location(self, event=None):
+        self.tree.delete(*self.tree.get_children())
+        for index, row in self.df.loc[self.df["Location"].eq(self.combo_location.get())].iterrows():
             self.tree.insert("", "end", text=index, values=list(row))
 
     def show(self):
