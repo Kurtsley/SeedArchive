@@ -280,7 +280,7 @@ def sql_recent_list():
     conn = create_connection(relative_to_data(currentdb))
     cursor = conn.cursor()
 
-    sql = """ SELECT "Barcode ID" FROM currentcrop ORDER BY "Date Edited" DESC LIMIT 10 """
+    sql = """ SELECT "Barcode ID" FROM currentcrop WHERE "Barcode ID" IS NOT NULL ORDER BY "Date Edited" DESC LIMIT 10 """
 
     try:
         cursor.execute(sql)
@@ -951,11 +951,9 @@ class MainMenu(tk.Frame):
         else:
             date = date[:10]
             if date:
-                return "NA"
+                return date
             else:
-                new_date = datetime.strptime(
-                    date, '%Y-%m-%d').strftime('%Y-%m-%d')
-                return new_date
+                return "NA"
 
     def show_results(self, label_num):
         """ Shows the results in the labels. """
