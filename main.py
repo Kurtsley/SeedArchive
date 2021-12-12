@@ -38,9 +38,8 @@ def relative_to_data(path: str) -> Path:
     return DATA_PATH / Path(path)
 
 
-# Global database variables
-currentdb = relative_to_data("currentcrops.db")
-archivedb = relative_to_data("archivecrops.db")
+# Global database variable
+seedarchivedb = relative_to_data("seedarchivedb.db")
 
 
 def create_connection(db_file):
@@ -57,7 +56,7 @@ def create_connection(db_file):
 
 def select_by_barcode(barcode=None):
     """ Sort by barcode. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""SELECT * FROM currentcrop WHERE "Barcode ID" = '{barcode}'"""
@@ -78,7 +77,7 @@ def select_by_barcode(barcode=None):
 
 def update_quantity(value, barcode):
     """ Updates the quantity in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Quantity (g)" = {round(value, 2)} WHERE "Barcode ID" = '{barcode}'"""
@@ -96,7 +95,7 @@ def update_quantity(value, barcode):
 
 def update_location(value, barcode):
     """ Updates the location in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Location" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -114,7 +113,7 @@ def update_location(value, barcode):
 
 def update_notes(value, barcode):
     """ Updates the notes in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Notes" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -132,7 +131,7 @@ def update_notes(value, barcode):
 
 def update_germ(value, barcode):
     """ Updates the germ in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Germ %" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -150,7 +149,7 @@ def update_germ(value, barcode):
 
 def update_tkw(value, barcode):
     """ Updates the tkw in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "TKW (g)" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -168,7 +167,7 @@ def update_tkw(value, barcode):
 
 def update_date(value, barcode):
     """ Updates the date to the current date in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Date Edited" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -186,7 +185,7 @@ def update_date(value, barcode):
 
 def max_variety_id():
     """ Finds the max variety id and adds one. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""SELECT MAX("Variety ID") FROM currentcrop"""
@@ -207,11 +206,9 @@ def max_variety_id():
 
 def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add a new row to the database. """
-    conn1 = create_connection(relative_to_data(currentdb))
-    conn2 = create_connection(relative_to_data(archivedb))
+    conn = create_connection(seedarchivedb)
 
-    cursor1 = conn1.cursor()
-    cursor2 = conn2.cursor()
+    cursor = conn.cursor()
 
     sql1 = f"""INSERT INTO currentcrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
     sql2 = f"""INSERT INTO archivecrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -220,10 +217,8 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
               quantity, germ, tkw, location, designation, entrant, notes, date)
 
     try:
-        cursor1.execute(sql1, record)
-        cursor2.execute(sql2, record)
-        conn1.commit()
-        conn2.commit()
+        cursor.execute(sql1, record)
+        conn.commit()
 
     except sql.Error as er:
         print('SQLite error: %s' % (' '.join(er.args)))
@@ -233,13 +228,12 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
         print(traceback.format_exception(exc_type, exc_value, exc_tb))
 
     finally:
-        conn1.close()
-        conn2.close()
+        conn.close()
 
 
 def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add an entry to the archive when a change is made. """
-    conn = create_connection(relative_to_data(archivedb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""INSERT INTO archivecrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -264,7 +258,7 @@ def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity
 
 def sql_to_dataframe():
     """ Take the current database and return a dataframe. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
 
     sql = f"""SELECT * FROM currentcrop ORDER BY "Year (rcv)" DESC"""
     sql_query = pd.read_sql_query(sql, conn)
@@ -277,7 +271,7 @@ def sql_to_dataframe():
 
 
 def sql_recent_list():
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = """ SELECT "Barcode ID" FROM currentcrop WHERE "Barcode ID" IS NOT NULL ORDER BY "Date Edited" DESC LIMIT 10 """
@@ -296,7 +290,7 @@ def sql_recent_list():
 
 def sql_history_dataframe(barcode):
     """ Return a dataframe of a specific barcode in archive. """
-    conn = create_connection(relative_to_data(archivedb))
+    conn = create_connection(seedarchivedb)
 
     sql = f"""SELECT * FROM archivecrop WHERE "Barcode ID" = '{barcode}' ORDER BY "Date Edited" DESC"""
     sql_query = pd.read_sql_query(sql, conn)
