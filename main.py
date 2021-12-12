@@ -1110,8 +1110,8 @@ class MainMenu(tk.Frame):
         today = date.today()
         dateformat = today.strftime('%Y-%m-%d')
 
-        shutil.copyfile(relative_to_data(currentdb),
-                        relative_to_backup(f"{dateformat}.db"))
+        f = filedialog.asksaveasfile(initialfile=f'{dateformat}.db',
+                                     defaultextension=".db", filetypes=[("Database Files", "*.db")])
 
     def load_database(self):
         """ Load the saved database. """
