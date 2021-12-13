@@ -214,7 +214,7 @@ def update_date(value, barcode):
     conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
-    sql = f"""UPDATE currentcrop SET "Date Edited" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
+    sql = f""" UPDATE currentcrop SET "Date Edited" = '{value}' WHERE "Barcode ID" = '{barcode}' """
 
     try:
         cursor.execute(sql)
@@ -293,6 +293,29 @@ def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity
         cursor.execute(sql, record)
         conn.commit()
 
+    except sql.Error as er:
+        print('SQLite error: %s' % (' '.join(er.args)))
+        print("Exception class is: ", er.__class__)
+        print('SQLite traceback: ')
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        print(traceback.format_exception(exc_type, exc_value, exc_tb))
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def delete_entry(barcode):
+    """ Delete an entry from the currentcrop table when thrown out. """
+    conn = create_connection(seedarchivedb)
+    cursor = conn.cursor()
+
+    sql = f"""
+        DELETE FROM currentcrop WHERE "Barcode ID" = '{barcode}' """
+
+    try:
+        cursor.execute(sql)
+        conn.commit()
     except sql.Error as er:
         print('SQLite error: %s' % (' '.join(er.args)))
         print("Exception class is: ", er.__class__)
@@ -1100,7 +1123,16 @@ class MainMenu(tk.Frame):
                     update_location(value, barcode)
                     self.current_date()
                     self.text_location.set(self.show_results(9))
+                    self.throw_out_check(barcode)
         except Exception:
+            pass
+
+    def throw_out_check(self, barcode):
+        """ Check if the location label is thrown out. """
+        value = self.text_location.get()
+        if value == "THROWN OUT":
+            delete_entry(barcode)
+        else:
             pass
 
     def change_notes(self):
