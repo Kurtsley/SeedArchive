@@ -17,10 +17,12 @@ import pandas as pd
 from tkinter import ttk
 import sys
 import traceback
-from docx import *
+from docx import Document
 import os
 import shutil
 from tkinter import filedialog
+
+from pandas.io.sql import to_sql
 
 
 OUTPUT_PATH = Path(__file__).parent
@@ -29,7 +31,7 @@ DATA_PATH = OUTPUT_PATH / Path("./data")
 BACKUP_PATH = OUTPUT_PATH / Path("./backup")
 
 # * ###########################################################################
-program_version = "0.1.7"  # * UPDATE THIS EVERY VERSION!!!!
+program_version = "0.1.8"  # * UPDATE THIS EVERY VERSION!!!!
 # * ###########################################################################
 
 
@@ -41,6 +43,7 @@ def relative_to_data(path: str) -> Path:
     return DATA_PATH / Path(path)
 
 
+<<<<<<< HEAD
 def relative_to_backup(path: str) -> Path:
     return BACKUP_PATH / Path(path)
 
@@ -48,6 +51,10 @@ def relative_to_backup(path: str) -> Path:
 # Global database variables
 currentdb = relative_to_data("currentcrops.db")
 archivedb = relative_to_data("archivecrops.db")
+=======
+# Global database variable
+seedarchivedb = relative_to_data("seedarchivedb.db")
+>>>>>>> main
 
 
 def create_connection(db_file):
@@ -59,12 +66,48 @@ def create_connection(db_file):
         return conn
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
+
+
+def test_connection():
+    """ Test the sqlite3 connection. """
+    conn = None
+
+    try:
+        conn = create_connection(seedarchivedb)
+        cursor1 = conn.cursor()
+        cursor2 = conn.cursor()
+
+        sql1 = """
+            SELECT "Barcode ID" FROM currentcrop
+        """
+        sql2 = """
+            SELECT "Barcode ID" FROM archivecrop
+        """
+
+        cursor1.execute(sql1)
+        cursor2.execute(sql2)
+
+        result1 = cursor1.fetchone()
+        result2 = cursor2.fetchone()
+
+        if result1 and result2:
+            return True
+        else:
+            return False
+
+    except sql.Error as e:
+        pass
+
+    finally:
+        cursor1.close()
+        cursor2.close()
+        conn.close()
 
 
 def select_by_barcode(barcode=None):
     """ Sort by barcode. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""SELECT * FROM currentcrop WHERE "Barcode ID" = '{barcode}'"""
@@ -74,9 +117,10 @@ def select_by_barcode(barcode=None):
         result = cursor.fetchall()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
         for i in result:
@@ -85,7 +129,7 @@ def select_by_barcode(barcode=None):
 
 def update_quantity(value, barcode):
     """ Updates the quantity in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Quantity (g)" = {round(value, 2)} WHERE "Barcode ID" = '{barcode}'"""
@@ -95,15 +139,16 @@ def update_quantity(value, barcode):
         conn.commit()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
 
 def update_location(value, barcode):
     """ Updates the location in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Location" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -113,15 +158,16 @@ def update_location(value, barcode):
         conn.commit()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
 
 def update_notes(value, barcode):
     """ Updates the notes in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Notes" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -131,15 +177,16 @@ def update_notes(value, barcode):
         conn.commit()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
 
 def update_germ(value, barcode):
     """ Updates the germ in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Germ %" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -149,15 +196,16 @@ def update_germ(value, barcode):
         conn.commit()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
 
 def update_tkw(value, barcode):
     """ Updates the tkw in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "TKW (g)" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -167,15 +215,16 @@ def update_tkw(value, barcode):
         conn.commit()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
 
 def update_date(value, barcode):
     """ Updates the date to the current date in the database. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""UPDATE currentcrop SET "Date Edited" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
@@ -185,15 +234,16 @@ def update_date(value, barcode):
         conn.commit()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
 
 def max_variety_id():
     """ Finds the max variety id and adds one. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
     sql = f"""SELECT MAX("Variety ID") FROM currentcrop"""
@@ -203,9 +253,10 @@ def max_variety_id():
         result = cursor.fetchall()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
 
         for i in result:
@@ -214,23 +265,20 @@ def max_variety_id():
 
 def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add a new row to the database. """
-    conn1 = create_connection(relative_to_data(currentdb))
-    conn2 = create_connection(relative_to_data(archivedb))
+    conn = create_connection(seedarchivedb)
 
-    cursor1 = conn1.cursor()
-    cursor2 = conn2.cursor()
+    cursor = conn.cursor()
 
-    sql1 = f"""INSERT INTO currentcrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-    sql2 = f"""INSERT INTO archivecrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    sql1 = """INSERT INTO currentcrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    sql2 = """INSERT INTO archivecrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
 
     try:
-        cursor1.execute(sql1, record)
-        cursor2.execute(sql2, record)
-        conn1.commit()
-        conn2.commit()
+        cursor.execute(sql1, record)
+        cursor.execute(sql2, record)
+        conn.commit()
 
     except sql.Error as er:
         print('SQLite error: %s' % (' '.join(er.args)))
@@ -240,16 +288,16 @@ def add_entry(barcode, varietyid, varietyname, crop, source, year, quantity, ger
         print(traceback.format_exception(exc_type, exc_value, exc_tb))
 
     finally:
-        conn1.close()
-        conn2.close()
+        cursor.close()
+        conn.close()
 
 
 def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity, germ, tkw, location, designation, entrant, notes, date):
     """ Add an entry to the archive when a change is made. """
-    conn = create_connection(relative_to_data(archivedb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
-    sql = f"""INSERT INTO archivecrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    sql = """INSERT INTO archivecrop ("Barcode ID", "Variety ID", "Variety", "Crop", "Source", "Year (rcv)", "Quantity (g)", "Germ %", "TKW (g)", "Location", "Designation / Project", "Entrant", "Notes", "Date Edited") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     record = (barcode, varietyid, varietyname, crop, source, year,
               quantity, germ, tkw, location, designation, entrant, notes, date)
@@ -266,14 +314,15 @@ def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity
         print(traceback.format_exception(exc_type, exc_value, exc_tb))
 
     finally:
+        cursor.close()
         conn.close()
 
 
 def sql_to_dataframe():
     """ Take the current database and return a dataframe. """
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
 
-    sql = f"""SELECT * FROM currentcrop ORDER BY "Year (rcv)" DESC"""
+    sql = """SELECT * FROM currentcrop ORDER BY "Year (rcv)" DESC"""
     sql_query = pd.read_sql_query(sql, conn)
 
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
@@ -284,26 +333,28 @@ def sql_to_dataframe():
 
 
 def sql_recent_list():
-    conn = create_connection(relative_to_data(currentdb))
+    conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
-    sql = """ SELECT "Barcode ID" FROM currentcrop ORDER BY "Date Edited" DESC LIMIT 10 """
+    sql = """ SELECT "Barcode ID" FROM currentcrop WHERE "Barcode ID" IS NOT NULL ORDER BY "Date Edited" DESC LIMIT 10 """
 
     try:
         cursor.execute(sql)
         result = cursor.fetchall()
 
     except sql.Error as e:
-        print(e)
+        messagebox.showerror(title="SQL Error", message=e)
 
     finally:
+        cursor.close()
         conn.close()
+
         return result
 
 
 def sql_history_dataframe(barcode):
     """ Return a dataframe of a specific barcode in archive. """
-    conn = create_connection(relative_to_data(archivedb))
+    conn = create_connection(seedarchivedb)
 
     sql = f"""SELECT * FROM archivecrop WHERE "Barcode ID" = '{barcode}' ORDER BY "Date Edited" DESC"""
     sql_query = pd.read_sql_query(sql, conn)
@@ -345,6 +396,16 @@ class MainMenu(tk.Frame):
         self.text_entrant = tk.StringVar()
         self.text_notes = tk.StringVar()
         self.text_date = tk.StringVar()
+
+        # Connection stringvar
+        self.text_connected = tk.StringVar()
+
+        # Connection test
+        if test_connection():
+            self.text_connected.set("Connected")
+        else:
+            messagebox.showerror(title="Connection Error",
+                                 message="Not Connected!")
 
         # Placing assets
 
@@ -512,6 +573,20 @@ class MainMenu(tk.Frame):
 
         # Creating labels
 
+        # Connected label
+        self.lbl_connected = tk.Label(
+            textvariable=self.text_connected,
+            font=(None, 9),
+            justify='center'
+        )
+        self.lbl_connected.place(
+            x=18,
+            y=1004,
+            width=65,
+            height=14
+        )
+
+        # Other labels
         self.lbl_barcode = tk.Entry(
             textvariable=self.text_barcode,
             relief="raised",
@@ -913,7 +988,7 @@ class MainMenu(tk.Frame):
         self.text_crop.set(self.show_results(3))
         self.text_source.set(self.show_results(4))
         self.text_year.set(self.show_results(5))
-        self.text_quantity.set(float(self.show_results(6)))
+        self.text_quantity.set(self.show_results(6))
         self.text_germ.set(self.show_results(7))
         self.text_tkw.set(self.show_results(8))
         self.text_location.set(self.show_results(9))
@@ -927,27 +1002,32 @@ class MainMenu(tk.Frame):
         """ Retrieve all the text for archiving purposes. """
         try:
             barcode = self.text_barcode_hidden.get()
-            varietyid = self.text_variety_id.get()
-            varietyname = self.text_variety_name.get()
-            crop = self.text_crop.get()
-            source = self.text_source.get()
-            year = self.text_year.get()
-            quantityold = self.text_quantity.get()
-            quantityfloat = float(quantityold)
-            quantity = int(quantityfloat)
-            entrant = self.text_entrant.get()
-            germold = self.text_germ.get()
-            germfloat = float(germold)
-            germ = int(germfloat)
-            tkw = self.text_tkw.get()
-            location = self.text_location.get()
-            designation = self.text_designation.get()
-            notes = self.text_notes.get()
-            date = self.text_date.get()
+            if barcode == "":
+                pass
+            else:
+                varietyid = self.text_variety_id.get()
+                varietyname = self.text_variety_name.get()
+                crop = self.text_crop.get()
+                source = self.text_source.get()
+                year = self.text_year.get()
+                quantityold = self.text_quantity.get()
+                quantity = float(quantityold)
+                entrant = self.text_entrant.get()
+                germold = self.text_germ.get()
+                if germold == "None":
+                    germ = "None"
+                else:
+                    germ = float(germold)
+                tkw = self.text_tkw.get()
+                location = self.text_location.get()
+                designation = self.text_designation.get()
+                notes = self.text_notes.get()
+                date = self.text_date.get()
 
-            add_to_archive(barcode, varietyid, varietyname, crop, source, year,
-                           quantity, germ, tkw, location, designation, entrant, notes, date)
-        except Exception:
+                add_to_archive(barcode, varietyid, varietyname, crop, source, year,
+                               quantity, germ, tkw, location, designation, entrant, notes, date)
+        except Exception as e:
+            messagebox.showerror(title="Error", message=e)
             pass
 
     def date_convert(self):
@@ -958,11 +1038,9 @@ class MainMenu(tk.Frame):
         else:
             date = date[:10]
             if date:
-                return "NA"
+                return date
             else:
-                new_date = datetime.strptime(
-                    date, '%Y-%m-%d').strftime('%Y-%m-%d')
-                return new_date
+                return "NA"
 
     def show_results(self, label_num):
         """ Shows the results in the labels. """
@@ -970,7 +1048,7 @@ class MainMenu(tk.Frame):
         input = self.lbl_barcode_hidden.get()
         list = select_by_barcode(f"{input}")
         if list[label_num] is None:
-            return "NA"
+            return "None"
         else:
             return list[label_num]
 
@@ -985,77 +1063,104 @@ class MainMenu(tk.Frame):
     def add_quantity(self):
         """ Change the quantity. """
         try:
-            value = QuantityPopupAdd(self).show()
-            original = self.text_quantity.get()
-            new = float(original) + value
             barcode = self.text_barcode_hidden.get()
-            update_quantity(new, barcode)
-            self.current_date()
-            self.text_quantity.set(float(self.show_results(6)))
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
+                pass
+            else:
+                value = QuantityPopupAdd(self).show()
+                original = self.text_quantity.get()
+                new = float(original) + value
+                update_quantity(new, barcode)
+                self.current_date()
+                self.text_quantity.set(float(self.show_results(6)))
         except Exception:
             pass
 
     def remove_quantity(self):
         """ Change the quantity. """
         try:
-            value = QuantityPopupRemove(self).show()
-
-            original = self.text_quantity.get()
-            new = float(original) - value
-
             barcode = self.text_barcode_hidden.get()
-            update_quantity(new, barcode)
-            self.current_date()
-            self.text_quantity.set(float(self.show_results(6)))
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
+                pass
+            else:
+                value = QuantityPopupRemove(self).show()
+                original = self.text_quantity.get()
+                new = float(original) - value
+                update_quantity(new, barcode)
+                self.current_date()
+                self.text_quantity.set(float(self.show_results(6)))
         except Exception:
             pass
 
     def change_location(self):
         """ Change the location field. """
         try:
-            value = LocationChangePopup(self).show()
-            if value == "":
+            barcode = self.text_barcode_hidden.get()
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
                 pass
             else:
-                barcode = self.text_barcode_hidden.get()
-                update_location(value, barcode)
-                self.current_date()
-                self.text_location.set(self.show_results(9))
+                value = LocationChangePopup(self).show()
+                if value == "":
+                    pass
+                else:
+                    barcode = self.text_barcode_hidden.get()
+                    update_location(value, barcode)
+                    self.current_date()
+                    self.text_location.set(self.show_results(9))
         except Exception:
             pass
 
     def change_notes(self):
         """ Change the notes field. """
         try:
-            value = NotesChangePopup(self).show()
-
             barcode = self.text_barcode_hidden.get()
-            update_notes(value, barcode)
-            self.current_date()
-            self.text_notes.set(self.show_results(12))
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
+                pass
+            else:
+                value = NotesChangePopup(self).show()
+                update_notes(value, barcode)
+                self.current_date()
+                self.text_notes.set(self.show_results(12))
         except Exception:
             pass
 
     def change_germ(self):
         """ Change the germ field. """
         try:
-            value = GermTKWChangePopup(self).show()
-
             barcode = self.text_barcode_hidden.get()
-            update_germ(value, barcode)
-            self.current_date()
-            self.text_germ.set(float(self.show_results(7)))
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
+                pass
+            else:
+                value = GermTKWChangePopup(self).show()
+                update_germ(value, barcode)
+                self.current_date()
+                self.text_germ.set(float(self.show_results(7)))
         except Exception:
             pass
 
     def change_tkw(self):
         """ Change the tkw field. """
         try:
-            value = GermTKWChangePopup(self).show()
             barcode = self.text_barcode_hidden.get()
-            update_tkw(value, barcode)
-            self.current_date()
-            self.text_tkw.set(float(self.show_results(8)))
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
+                pass
+            else:
+                value = GermTKWChangePopup(self).show()
+                update_tkw(value, barcode)
+                self.current_date()
+                self.text_tkw.set(float(self.show_results(8)))
         except Exception:
             pass
 
@@ -1070,13 +1175,12 @@ class MainMenu(tk.Frame):
             if value == "":
                 pass
             else:
-                value = value.strip()
-                self.text_barcode.set(value)
-                self.text_barcode_hidden.set(value)
-                #
                 # This is necessary in case the barcode has any space around it
                 # when scanned. It is present in the excel file so this is a
                 # precaution.
+                value = value.strip()
+                self.text_barcode.set(value)
+                self.text_barcode_hidden.set(value)
 
                 # Update the entry widgets and then clear the barcode field for
                 # future scanning.
@@ -1097,15 +1201,22 @@ class MainMenu(tk.Frame):
 
     def open_history(self):
         barcode = self.text_barcode_hidden.get()
-        HistoryView(self, barcode).show()
+        if barcode == "":
+            messagebox.showerror(title="Error", message="No barcode scanned!")
+            pass
+        else:
+            HistoryView(self, barcode).show()
 
     def word_export(self):
         """ Export the barcode to a word file. """
         barcode = self.text_barcode_hidden.get()
-        document = Document()
-        document.add_paragraph(str(barcode))
-        document.save(relative_to_data('tmp.docx'))
-        os.startfile(relative_to_data('tmp.docx'))
+        if barcode == "":
+            messagebox.showerror(title="Error", message="No barcode scanned!")
+        else:
+            document = Document()
+            document.add_paragraph(str(barcode))
+            document.save(relative_to_data('tmp.docx'))
+            os.startfile(relative_to_data('tmp.docx'))
 
     def set_barcode(self, value):
         """ Set the barcode for use in another class. """
@@ -2074,6 +2185,9 @@ class TableView(object):
         self.df = sql_to_dataframe()
         self.df["Variety ID"] = self.df["Variety ID"].fillna(0).astype(int)
 
+        self.df["Germ %"].fillna(value="None", inplace=True)
+        self.df["TKW (g)"].fillna(value="None", inplace=True)
+
         self.tree = ttk.Treeview(self.master)
         self.tree['show'] = 'headings'
         columns = list(self.df.columns)
@@ -2148,10 +2262,11 @@ class HistoryView(object):
         self.master.resizable(False, False)
         self.master.state("zoomed")
 
-        barcode = barcode
-
         self.df = sql_history_dataframe(barcode)
         self.df["Variety ID"] = self.df["Variety ID"].fillna(0).astype(int)
+
+        self.df["Germ %"].fillna(value="None", inplace=True)
+        self.df["TKW (g)"].fillna(value="None", inplace=True)
 
         self.tree = ttk.Treeview(self.master)
         self.tree['show'] = 'headings'
@@ -2197,6 +2312,7 @@ def main():
 
     app = MainMenu(root)
     app.pack()
+
     root.mainloop()
 
 
