@@ -43,18 +43,12 @@ def relative_to_data(path: str) -> Path:
     return DATA_PATH / Path(path)
 
 
-<<<<<<< HEAD
 def relative_to_backup(path: str) -> Path:
     return BACKUP_PATH / Path(path)
 
 
-# Global database variables
-currentdb = relative_to_data("currentcrops.db")
-archivedb = relative_to_data("archivecrops.db")
-=======
 # Global database variable
 seedarchivedb = relative_to_data("seedarchivedb.db")
->>>>>>> main
 
 
 def create_connection(db_file):
@@ -1227,14 +1221,26 @@ class MainMenu(tk.Frame):
         today = date.today()
         dateformat = today.strftime('%Y-%m-%d')
 
+        source = seedarchivedb
+
         f = filedialog.asksaveasfile(initialfile=f'{dateformat}.db',
                                      defaultextension=".db", filetypes=[("Database Files", "*.db")])
 
+        shutil.copy(source, f.name)
+
     def load_database(self):
         """ Load the saved database. """
-        name = filedialog.askopenfilename(initialdir=relative_to_backup('.'),
-                                          title="Choose database file.")
-        pass
+        today = date.today()
+        dateformat = today.strftime('%Y-%m-%d')
+
+        source = filedialog.askopenfilename(title="Choose database file.")
+        dest_first = relative_to_data("tmp.db")
+
+        shutil.move(source, dest_first)
+
+        shutil.move(seedarchivedb, relative_to_backup(f"{dateformat}.db"))
+
+        shutil.move(relative_to_data("tmp.db"), seedarchivedb)
 
 
 class MainMenuBar(tk.Menu):
