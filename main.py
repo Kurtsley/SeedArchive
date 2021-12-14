@@ -2122,7 +2122,7 @@ class EntryMenu(object):
         elif crop == "Chickpea":
             return "CHP"
         else:
-            return "NA"
+            return "UK"
 
     def sort_source(self, source):
         """ Sort the source and return shortened version. """
@@ -2137,7 +2137,7 @@ class EntryMenu(object):
         elif source == "Other":
             return "OTH"
         else:
-            return "NA"
+            return "UK"
 
     def return_all(self):
         """ Return all values. """
