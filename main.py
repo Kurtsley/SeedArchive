@@ -18,7 +18,6 @@ from tkinter import ttk
 import sys
 import traceback
 import os
-
 from pandas.io.sql import to_sql
 
 
@@ -380,7 +379,7 @@ def sql_all_todataframe():
     """ Return all entries in a dataframe. """
     conn = create_connection(seedarchivedb)
 
-    sql = """SELECT DISTINCT "Barcode ID", "Year (rcv)", "Date Edited" FROM archivecrop """
+    sql = """SELECT "Barcode ID", "Year (rcv)", "Date Edited" FROM currentcrop """
     sql_query = pd.read_sql_query(sql, conn)
 
     df = pd.DataFrame(sql_query, columns=[
