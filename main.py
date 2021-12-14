@@ -17,7 +17,6 @@ import pandas as pd
 from tkinter import ttk
 import sys
 import traceback
-from docx import Document
 import os
 
 from pandas.io.sql import to_sql
@@ -372,6 +371,20 @@ def sql_history_dataframe(barcode):
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
 
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+
+    conn.close()
+    return df
+
+
+def sql_all_todataframe():
+    """ Return all entries in a dataframe. """
+    conn = create_connection(seedarchivedb)
+
+    sql = """SELECT DISTINCT "Barcode ID", "Year (rcv)", "Date Edited" FROM archivecrop """
+    sql_query = pd.read_sql_query(sql, conn)
+
+    df = pd.DataFrame(sql_query, columns=[
+                      'Barcode ID', 'Year (rcv)', 'Date Edited'])
 
     conn.close()
     return df
@@ -997,7 +1010,7 @@ class MainMenu(tk.Frame):
             image=self.but_image_8,
             border=0,
             highlightthickness=0,
-            command=self.word_export,
+            command=self.excel_export,
             relief='flat'
         )
         self.but_export.place(
@@ -1251,16 +1264,11 @@ class MainMenu(tk.Frame):
         else:
             HistoryView(self, barcode).show()
 
-    def word_export(self):
-        """ Export the barcode to a word file. """
-        barcode = self.text_barcode_hidden.get()
-        if barcode == "":
-            messagebox.showerror(title="Error", message="No barcode scanned!")
-        else:
-            document = Document()
-            document.add_paragraph(str(barcode))
-            document.save(relative_to_data('tmp.docx'))
-            os.startfile(relative_to_data('tmp.docx'))
+    def excel_export(self):
+        """ Export the barcode to an excel file. """
+        df = sql_all_todataframe()
+        df.to_excel(relative_to_data("barcodes.xlsx"), index=False)
+        os.startfile(relative_to_data("barcodes.xlsx"))
 
     def set_barcode(self, value):
         """ Set the barcode for use in another class. """
