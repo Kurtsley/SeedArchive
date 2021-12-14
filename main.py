@@ -823,6 +823,24 @@ class MainMenu(tk.Frame):
             height=40
         )
 
+        # Discard button
+        self.but_image_9 = tk.PhotoImage(
+            file=relative_to_assets("Discard.png"))
+        self.but_discard = tk.Button(
+            image=self.but_image_9,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: [self.discard_barcode(), self.archive_on_update()],
+            relief='flat',
+            bg="#DADADA"
+        )
+        self.but_discard.place(
+            x=465,
+            y=365,
+            width=103,
+            height=40
+        )
+
         # Scan button
         self.button_image_1 = tk.PhotoImage(
             file=relative_to_assets("scan.png"))
@@ -921,7 +939,7 @@ class MainMenu(tk.Frame):
         )
         self.but_edit_location.place(
             x=465,
-            y=341,
+            y=317,
             width=61,
             height=40
         )
@@ -1119,20 +1137,27 @@ class MainMenu(tk.Frame):
                 if value == "":
                     pass
                 else:
-                    barcode = self.text_barcode_hidden.get()
                     update_location(value, barcode)
                     self.current_date()
                     self.text_location.set(self.show_results(9))
-                    self.throw_out_check(barcode)
         except Exception:
             pass
 
-    def throw_out_check(self, barcode):
-        """ Check if the location label is thrown out. """
-        value = self.text_location.get()
-        if value == "THROWN OUT":
-            delete_entry(barcode)
-        else:
+    def discard_barcode(self):
+        """ Delete the barcode from the currentcrop table. """
+        try:
+            barcode = self.text_barcode_hidden.get()
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
+                pass
+            else:
+                value = "THROWN OUT"
+                update_location(value, barcode)
+                self.current_date()
+                self.text_location.set(self.show_results(9))
+                delete_entry(barcode)
+        except Exception:
             pass
 
     def change_notes(self):
@@ -1433,7 +1458,7 @@ class LocationChangePopup(object):
         self.location_change = tk.StringVar()
 
         self.locations = ('Cabinet 1 / Shelf 1', 'Cabinet 1 / Shelf 2', 'Cabinet 1 / Shelf 3', 'Cabinet 1 / Shelf 4', 'Cabinet 1 / Shelf 5', 'Cabinet 2 / Shelf 1', 'Cabinet 2 / Shelf 2', 'Cabinet 2 / Shelf 3', 'Cabinet 2 / Shelf 4', 'Cabinet 2 / Shelf 5', 'Cabinet 3 / Shelf 1', 'Cabinet 3 / Shelf 2', 'Cabinet 3 / Shelf 3', 'Cabinet 3 / Shelf 4', 'Cabinet 3 / Shelf 5', 'Cabinet 4 / Shelf 1', 'Cabinet 4 / Shelf 2', 'Cabinet 4 / Shelf 3', 'Cabinet 4 / Shelf 4',
-                          'Cabinet 4 / Shelf 5', 'Cabinet 5 / Shelf 1', 'Cabinet 5 / Shelf 2', 'Cabinet 5 / Shelf 3', 'Cabinet 5 / Shelf 4', 'Cabinet 5 / Shelf 5', 'Cabinet 6 / Shelf 1', 'Cabinet 6 / Shelf 2', 'Cabinet 6 / Shelf 3', 'Cabinet 6 / Shelf 4', 'Cabinet 6 / Shelf 5', 'Cabinet 7 / Shelf 1', 'Cabinet 7 / Shelf 2', 'Cabinet 7 / Shelf 3', 'Cabinet 7 / Shelf 4', 'Cabinet 7 / Shelf 5', 'Cabinet 8 / Shelf 1', 'Cabinet 8 / Shelf 2', 'Cabinet 8 / Shelf 3', 'Cabinet 8 / Shelf 4', 'Cabinet 8 / Shelf 5', 'Cabinet 9 / Shelf 1', 'Cabinet 9 / Shelf 2', 'Cabinet 9 / Shelf 3', 'Cabinet 9 / Shelf 4', 'Cabinet 9 / Shelf 5', 'Cabinet 10 / Shelf 1', 'Cabinet 10 / Shelf 2', 'Cabinet 10 / Shelf 3', 'Cabinet 10 / Shelf 4', 'Cabinet 10 / Shelf 5', 'Cabinet 11 / Shelf 1', 'Cabinet 11 / Shelf 2', 'Cabinet 11 / Shelf 3', 'Cabinet 11 / Shelf 4', 'Cabinet 11 / Shelf 5', 'Open Shelf 1 / Shelf 1', 'Open Shelf 1 / Shelf 2', 'Open Shelf 1 / Shelf 3', 'Open Shelf 1 / Shelf 4', 'Open Shelf 2 / Shelf 1', 'Open Shelf 2 / Shelf 2', 'Open Shelf 2 / Shelf 3', 'Open Shelf 2 / Shelf 4', 'Open Shelf 2 / Shelf 5', 'Cart', 'THROWN OUT')
+                          'Cabinet 4 / Shelf 5', 'Cabinet 5 / Shelf 1', 'Cabinet 5 / Shelf 2', 'Cabinet 5 / Shelf 3', 'Cabinet 5 / Shelf 4', 'Cabinet 5 / Shelf 5', 'Cabinet 6 / Shelf 1', 'Cabinet 6 / Shelf 2', 'Cabinet 6 / Shelf 3', 'Cabinet 6 / Shelf 4', 'Cabinet 6 / Shelf 5', 'Cabinet 7 / Shelf 1', 'Cabinet 7 / Shelf 2', 'Cabinet 7 / Shelf 3', 'Cabinet 7 / Shelf 4', 'Cabinet 7 / Shelf 5', 'Cabinet 8 / Shelf 1', 'Cabinet 8 / Shelf 2', 'Cabinet 8 / Shelf 3', 'Cabinet 8 / Shelf 4', 'Cabinet 8 / Shelf 5', 'Cabinet 9 / Shelf 1', 'Cabinet 9 / Shelf 2', 'Cabinet 9 / Shelf 3', 'Cabinet 9 / Shelf 4', 'Cabinet 9 / Shelf 5', 'Cabinet 10 / Shelf 1', 'Cabinet 10 / Shelf 2', 'Cabinet 10 / Shelf 3', 'Cabinet 10 / Shelf 4', 'Cabinet 10 / Shelf 5', 'Cabinet 11 / Shelf 1', 'Cabinet 11 / Shelf 2', 'Cabinet 11 / Shelf 3', 'Cabinet 11 / Shelf 4', 'Cabinet 11 / Shelf 5', 'Open Shelf 1 / Shelf 1', 'Open Shelf 1 / Shelf 2', 'Open Shelf 1 / Shelf 3', 'Open Shelf 1 / Shelf 4', 'Open Shelf 2 / Shelf 1', 'Open Shelf 2 / Shelf 2', 'Open Shelf 2 / Shelf 3', 'Open Shelf 2 / Shelf 4', 'Open Shelf 2 / Shelf 5', 'Cart')
 
         frm1 = tk.Frame(self.master, padx=5, pady=5)
         frm1.grid(row=0, column=1)
