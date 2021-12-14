@@ -17,11 +17,7 @@ import pandas as pd
 from tkinter import ttk
 import sys
 import traceback
-from docx import Document
 import os
-import shutil
-from tkinter import filedialog
-
 from pandas.io.sql import to_sql
 
 
@@ -41,10 +37,6 @@ def relative_to_assets(path: str) -> Path:
 
 def relative_to_data(path: str) -> Path:
     return DATA_PATH / Path(path)
-
-
-def relative_to_backup(path: str) -> Path:
-    return BACKUP_PATH / Path(path)
 
 
 # Global database variable
@@ -221,7 +213,7 @@ def update_date(value, barcode):
     conn = create_connection(seedarchivedb)
     cursor = conn.cursor()
 
-    sql = f"""UPDATE currentcrop SET "Date Edited" = '{value}' WHERE "Barcode ID" = '{barcode}'"""
+    sql = f""" UPDATE currentcrop SET "Date Edited" = '{value}' WHERE "Barcode ID" = '{barcode}' """
 
     try:
         cursor.execute(sql)
@@ -312,6 +304,29 @@ def add_to_archive(barcode, varietyid, varietyname, crop, source, year, quantity
         conn.close()
 
 
+def delete_entry(barcode):
+    """ Delete an entry from the currentcrop table when thrown out. """
+    conn = create_connection(seedarchivedb)
+    cursor = conn.cursor()
+
+    sql = f"""
+        DELETE FROM currentcrop WHERE "Barcode ID" = '{barcode}' """
+
+    try:
+        cursor.execute(sql)
+        conn.commit()
+    except sql.Error as er:
+        print('SQLite error: %s' % (' '.join(er.args)))
+        print("Exception class is: ", er.__class__)
+        print('SQLite traceback: ')
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        print(traceback.format_exception(exc_type, exc_value, exc_tb))
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def sql_to_dataframe():
     """ Take the current database and return a dataframe. """
     conn = create_connection(seedarchivedb)
@@ -356,6 +371,20 @@ def sql_history_dataframe(barcode):
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
 
                       'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+
+    conn.close()
+    return df
+
+
+def sql_all_todataframe():
+    """ Return all entries in a dataframe. """
+    conn = create_connection(seedarchivedb)
+
+    sql = """SELECT "Barcode ID", "Year (rcv)", "Date Edited" FROM currentcrop """
+    sql_query = pd.read_sql_query(sql, conn)
+
+    df = pd.DataFrame(sql_query, columns=[
+                      'Barcode ID', 'Year (rcv)', 'Date Edited'])
 
     conn.close()
     return df
@@ -807,6 +836,24 @@ class MainMenu(tk.Frame):
             height=40
         )
 
+        # Discard button
+        self.but_image_9 = tk.PhotoImage(
+            file=relative_to_assets("Discard.png"))
+        self.but_discard = tk.Button(
+            image=self.but_image_9,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: [self.discard_barcode(), self.archive_on_update()],
+            relief='flat',
+            bg="#DADADA"
+        )
+        self.but_discard.place(
+            x=465,
+            y=365,
+            width=103,
+            height=40
+        )
+
         # Scan button
         self.button_image_1 = tk.PhotoImage(
             file=relative_to_assets("scan.png"))
@@ -905,7 +952,7 @@ class MainMenu(tk.Frame):
         )
         self.but_edit_location.place(
             x=465,
-            y=341,
+            y=317,
             width=61,
             height=40
         )
@@ -963,7 +1010,7 @@ class MainMenu(tk.Frame):
             image=self.but_image_8,
             border=0,
             highlightthickness=0,
-            command=self.word_export,
+            command=self.excel_export,
             relief='flat'
         )
         self.but_export.place(
@@ -1103,10 +1150,26 @@ class MainMenu(tk.Frame):
                 if value == "":
                     pass
                 else:
-                    barcode = self.text_barcode_hidden.get()
                     update_location(value, barcode)
                     self.current_date()
                     self.text_location.set(self.show_results(9))
+        except Exception:
+            pass
+
+    def discard_barcode(self):
+        """ Delete the barcode from the currentcrop table. """
+        try:
+            barcode = self.text_barcode_hidden.get()
+            if barcode == "":
+                messagebox.showerror(
+                    title="Error", message="No barcode scanned!")
+                pass
+            else:
+                value = "THROWN OUT"
+                update_location(value, barcode)
+                self.current_date()
+                self.text_location.set(self.show_results(9))
+                delete_entry(barcode)
         except Exception:
             pass
 
@@ -1201,16 +1264,11 @@ class MainMenu(tk.Frame):
         else:
             HistoryView(self, barcode).show()
 
-    def word_export(self):
-        """ Export the barcode to a word file. """
-        barcode = self.text_barcode_hidden.get()
-        if barcode == "":
-            messagebox.showerror(title="Error", message="No barcode scanned!")
-        else:
-            document = Document()
-            document.add_paragraph(str(barcode))
-            document.save(relative_to_data('tmp.docx'))
-            os.startfile(relative_to_data('tmp.docx'))
+    def excel_export(self):
+        """ Export the barcode to an excel file. """
+        df = sql_all_todataframe()
+        df.to_excel(relative_to_data("barcodes.xlsx"), index=False)
+        os.startfile(relative_to_data("barcodes.xlsx"))
 
     def set_barcode(self, value):
         """ Set the barcode for use in another class. """
@@ -1446,7 +1504,7 @@ class LocationChangePopup(object):
         self.location_change = tk.StringVar()
 
         self.locations = ('Cabinet 1 / Shelf 1', 'Cabinet 1 / Shelf 2', 'Cabinet 1 / Shelf 3', 'Cabinet 1 / Shelf 4', 'Cabinet 1 / Shelf 5', 'Cabinet 2 / Shelf 1', 'Cabinet 2 / Shelf 2', 'Cabinet 2 / Shelf 3', 'Cabinet 2 / Shelf 4', 'Cabinet 2 / Shelf 5', 'Cabinet 3 / Shelf 1', 'Cabinet 3 / Shelf 2', 'Cabinet 3 / Shelf 3', 'Cabinet 3 / Shelf 4', 'Cabinet 3 / Shelf 5', 'Cabinet 4 / Shelf 1', 'Cabinet 4 / Shelf 2', 'Cabinet 4 / Shelf 3', 'Cabinet 4 / Shelf 4',
-                          'Cabinet 4 / Shelf 5', 'Cabinet 5 / Shelf 1', 'Cabinet 5 / Shelf 2', 'Cabinet 5 / Shelf 3', 'Cabinet 5 / Shelf 4', 'Cabinet 5 / Shelf 5', 'Cabinet 6 / Shelf 1', 'Cabinet 6 / Shelf 2', 'Cabinet 6 / Shelf 3', 'Cabinet 6 / Shelf 4', 'Cabinet 6 / Shelf 5', 'Cabinet 7 / Shelf 1', 'Cabinet 7 / Shelf 2', 'Cabinet 7 / Shelf 3', 'Cabinet 7 / Shelf 4', 'Cabinet 7 / Shelf 5', 'Cabinet 8 / Shelf 1', 'Cabinet 8 / Shelf 2', 'Cabinet 8 / Shelf 3', 'Cabinet 8 / Shelf 4', 'Cabinet 8 / Shelf 5', 'Cabinet 9 / Shelf 1', 'Cabinet 9 / Shelf 2', 'Cabinet 9 / Shelf 3', 'Cabinet 9 / Shelf 4', 'Cabinet 9 / Shelf 5', 'Cabinet 10 / Shelf 1', 'Cabinet 10 / Shelf 2', 'Cabinet 10 / Shelf 3', 'Cabinet 10 / Shelf 4', 'Cabinet 10 / Shelf 5', 'Cabinet 11 / Shelf 1', 'Cabinet 11 / Shelf 2', 'Cabinet 11 / Shelf 3', 'Cabinet 11 / Shelf 4', 'Cabinet 11 / Shelf 5', 'Open Shelf 1 / Shelf 1', 'Open Shelf 1 / Shelf 2', 'Open Shelf 1 / Shelf 3', 'Open Shelf 1 / Shelf 4', 'Open Shelf 2 / Shelf 1', 'Open Shelf 2 / Shelf 2', 'Open Shelf 2 / Shelf 3', 'Open Shelf 2 / Shelf 4', 'Open Shelf 2 / Shelf 5', 'Cart', 'THROWN OUT')
+                          'Cabinet 4 / Shelf 5', 'Cabinet 5 / Shelf 1', 'Cabinet 5 / Shelf 2', 'Cabinet 5 / Shelf 3', 'Cabinet 5 / Shelf 4', 'Cabinet 5 / Shelf 5', 'Cabinet 6 / Shelf 1', 'Cabinet 6 / Shelf 2', 'Cabinet 6 / Shelf 3', 'Cabinet 6 / Shelf 4', 'Cabinet 6 / Shelf 5', 'Cabinet 7 / Shelf 1', 'Cabinet 7 / Shelf 2', 'Cabinet 7 / Shelf 3', 'Cabinet 7 / Shelf 4', 'Cabinet 7 / Shelf 5', 'Cabinet 8 / Shelf 1', 'Cabinet 8 / Shelf 2', 'Cabinet 8 / Shelf 3', 'Cabinet 8 / Shelf 4', 'Cabinet 8 / Shelf 5', 'Cabinet 9 / Shelf 1', 'Cabinet 9 / Shelf 2', 'Cabinet 9 / Shelf 3', 'Cabinet 9 / Shelf 4', 'Cabinet 9 / Shelf 5', 'Cabinet 10 / Shelf 1', 'Cabinet 10 / Shelf 2', 'Cabinet 10 / Shelf 3', 'Cabinet 10 / Shelf 4', 'Cabinet 10 / Shelf 5', 'Cabinet 11 / Shelf 1', 'Cabinet 11 / Shelf 2', 'Cabinet 11 / Shelf 3', 'Cabinet 11 / Shelf 4', 'Cabinet 11 / Shelf 5', 'Open Shelf 1 / Shelf 1', 'Open Shelf 1 / Shelf 2', 'Open Shelf 1 / Shelf 3', 'Open Shelf 1 / Shelf 4', 'Open Shelf 2 / Shelf 1', 'Open Shelf 2 / Shelf 2', 'Open Shelf 2 / Shelf 3', 'Open Shelf 2 / Shelf 4', 'Open Shelf 2 / Shelf 5', 'Cart')
 
         frm1 = tk.Frame(self.master, padx=5, pady=5)
         frm1.grid(row=0, column=1)
@@ -2102,7 +2160,7 @@ class EntryMenu(object):
         elif crop == "Chickpea":
             return "CHP"
         else:
-            return "NA"
+            return "UK"
 
     def sort_source(self, source):
         """ Sort the source and return shortened version. """
@@ -2117,7 +2175,7 @@ class EntryMenu(object):
         elif source == "Other":
             return "OTH"
         else:
-            return "NA"
+            return "UK"
 
     def return_all(self):
         """ Return all values. """
