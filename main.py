@@ -29,7 +29,7 @@ DATA_PATH = OUTPUT_PATH / Path("./data")
 BACKUP_PATH = OUTPUT_PATH / Path("./backup")
 
 # * ###########################################################################
-program_version = "0.2.0"  # * UPDATE THIS EVERY VERSION!!!!
+program_version = "0.2.1"  # * UPDATE THIS EVERY VERSION!!!!
 # * ###########################################################################
 
 
