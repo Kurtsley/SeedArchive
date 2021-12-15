@@ -19,6 +19,8 @@ import sys
 import traceback
 import os
 from pandas.io.sql import to_sql
+from tkinter import filedialog
+import shutil
 
 
 OUTPUT_PATH = Path(__file__).parent
@@ -37,6 +39,10 @@ def relative_to_assets(path: str) -> Path:
 
 def relative_to_data(path: str) -> Path:
     return DATA_PATH / Path(path)
+
+
+def relative_to_backup(path: str) -> Path:
+    return BACKUP_PATH / Path(path)
 
 
 # Global database variable
@@ -1281,24 +1287,38 @@ class MainMenu(tk.Frame):
 
         source = seedarchivedb
 
-        f = filedialog.asksaveasfile(initialfile=f'{dateformat}.db',
-                                     defaultextension=".db", filetypes=[("Database Files", "*.db")])
+        try:
+            barcode = self.text_barcode_hidden.get()
+            f = filedialog.asksaveasfile(initialfile=f'{dateformat}.db',
+                                         defaultextension=".db", filetypes=[("Database Files", "*.db")], initialdir=relative_to_backup("."))
+            if f is None:
+                pass
+            else:
+                shutil.copy(source, f.name)
 
-        shutil.copy(source, f.name)
+                messagebox.showinfo(title="File saved",
+                                    message=f"{dateformat}.db has been saved")
+                print(barcode)
+        except Error as e:
+            messagebox.showerror(title="Save Error", message=e)
+            pass
 
     def load_database(self):
         """ Load the saved database. """
-        today = date.today()
-        dateformat = today.strftime('%Y-%m-%d')
+        try:
+            source = filedialog.askopenfilename(title="Choose database file.")
+            if source == "":
+                pass
+            else:
+                dest = seedarchivedb
 
-        source = filedialog.askopenfilename(title="Choose database file.")
-        dest_first = relative_to_data("tmp.db")
+                shutil.copy(source, dest)
 
-        shutil.move(source, dest_first)
-
-        shutil.move(seedarchivedb, relative_to_backup(f"{dateformat}.db"))
-
-        shutil.move(relative_to_data("tmp.db"), seedarchivedb)
+                messagebox.showinfo(
+                    title="Load", message=f"Successfully loaded {source}")
+        except Error as e:
+            messagebox.showerror(title=f"Load Error", message=e)
+            pass
 
 
 class MainMenuBar(tk.Menu):
