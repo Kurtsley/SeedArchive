@@ -1274,7 +1274,10 @@ class MainMenu(tk.Frame):
         """ Export the barcode to an excel file. """
         df = sql_all_todataframe()
         df.to_excel(relative_to_data("barcodes.xlsx"), index=False)
-        os.startfile(relative_to_data("barcodes.xlsx"))
+        try:
+            os.startfile(relative_to_data("barcodes.xlsx"))
+        except Error as e:
+            messagebox.showerror(title="Excel Error", message=e)
 
     def set_barcode(self, value):
         """ Set the barcode for use in another class. """
