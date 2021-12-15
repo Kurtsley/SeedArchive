@@ -19,11 +19,14 @@ import sys
 import traceback
 import os
 from pandas.io.sql import to_sql
+from tkinter import filedialog
+import shutil
 
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
+BACKUP_PATH = OUTPUT_PATH / Path("./backup")
 
 # * ###########################################################################
 program_version = "0.1.8"  # * UPDATE THIS EVERY VERSION!!!!
@@ -36,6 +39,10 @@ def relative_to_assets(path: str) -> Path:
 
 def relative_to_data(path: str) -> Path:
     return DATA_PATH / Path(path)
+
+
+def relative_to_backup(path: str) -> Path:
+    return BACKUP_PATH / Path(path)
 
 
 # Global database variable
@@ -1273,6 +1280,46 @@ class MainMenu(tk.Frame):
         """ Set the barcode for use in another class. """
         self.text_barcode.set(value)
 
+    def save_database(self):
+        """ Saves the database with a current date timestamp. """
+        today = date.today()
+        dateformat = today.strftime('%Y-%m-%d')
+
+        source = seedarchivedb
+
+        try:
+            barcode = self.text_barcode_hidden.get()
+            f = filedialog.asksaveasfile(initialfile=f'{dateformat}.db',
+                                         defaultextension=".db", filetypes=[("Database Files", "*.db")], initialdir=relative_to_backup("."))
+            if f is None:
+                pass
+            else:
+                shutil.copy(source, f.name)
+
+                messagebox.showinfo(title="File saved",
+                                    message=f"{dateformat}.db has been saved")
+                print(barcode)
+        except Error as e:
+            messagebox.showerror(title="Save Error", message=e)
+            pass
+
+    def load_database(self):
+        """ Load the saved database. """
+        try:
+            source = filedialog.askopenfilename(title="Choose database file.")
+            if source == "":
+                pass
+            else:
+                dest = seedarchivedb
+
+                shutil.copy(source, dest)
+
+                messagebox.showinfo(
+                    title="Load", message=f"Successfully loaded {source}")
+        except Error as e:
+            messagebox.showerror(title=f"Load Error", message=e)
+            pass
+
 
 class MainMenuBar(tk.Menu):
     """ Class for main menu bar. """
@@ -1293,6 +1340,8 @@ class MainMenuBar(tk.Menu):
         self.add_cascade(label="File", underline=0, menu=filemenu)
 
         filemenu.add_cascade(label="Recent Barcodes", menu=recentmenu)
+        filemenu.add_command(label="Save Database", command=self.save)
+        filemenu.add_command(label="Load Database", command=self.load)
         filemenu.add_command(label="About", command=self.about)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.close)
@@ -1303,6 +1352,16 @@ class MainMenuBar(tk.Menu):
         m.set_barcode(self.barcode_vars.get())
         m.get_barcode()
         sql_recent_list()
+
+    def save(self):
+        """ Save the database. """
+        m = MainMenu(self.master)
+        m.save_database()
+
+    def load(self):
+        """ Load a database. """
+        m = MainMenu(self.master)
+        m.load_database()
 
     def about(self):
         """ Version info popup. """
