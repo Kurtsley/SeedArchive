@@ -1058,7 +1058,10 @@ class MainMenu(tk.Frame):
                 source = self.text_source.get()
                 year = self.text_year.get()
                 quantityold = self.text_quantity.get()
-                quantity = float(quantityold)
+                if quantityold == "":
+                    quantity = "None"
+                else:
+                    quantity = float(quantityold)
                 entrant = self.text_entrant.get()
                 germold = self.text_germ.get()
                 if germold == "None":
@@ -1069,7 +1072,7 @@ class MainMenu(tk.Frame):
                 location = self.text_location.get()
                 designation = self.text_designation.get()
                 notes = self.text_notes.get()
-                date = self.text_date.get()
+                date = self.show_results(13)
 
                 add_to_archive(barcode, varietyid, varietyname, crop, source, year,
                                quantity, germ, tkw, location, designation, entrant, notes, date)
@@ -1101,11 +1104,11 @@ class MainMenu(tk.Frame):
 
     def current_date(self):
         """ Sets the edited date to current date. """
-        today = date.today()
-        dateformat = today.strftime('%Y-%m-%d')
+        time = datetime.now()
+        dateformat = time.strftime("%Y-%m-%d %H:%M:%S")
         barcode = self.text_barcode_hidden.get()
         update_date(dateformat, barcode)
-        self.text_date.set(self.show_results(13))
+        self.text_date.set(self.date_convert())
 
     def add_quantity(self):
         """ Change the quantity. """
@@ -1834,6 +1837,15 @@ class EntryMenu(object):
             font=("Roboto Bold", 24 * -1)
         )
 
+        self.canvas.create_text(
+            534.0,
+            509.0,
+            anchor="nw",
+            text="Date Edited",
+            fill="#000000",
+            font=("Roboto Bold", 24 * -1)
+        )
+
         # List variables for the optionmenus
         self.locations = ('Cabinet 1 / Shelf 1', 'Cabinet 1 / Shelf 2', 'Cabinet 1 / Shelf 3', 'Cabinet 1 / Shelf 4', 'Cabinet 1 / Shelf 5', 'Cabinet 2 / Shelf 1', 'Cabinet 2 / Shelf 2', 'Cabinet 2 / Shelf 3', 'Cabinet 2 / Shelf 4', 'Cabinet 2 / Shelf 5', 'Cabinet 3 / Shelf 1', 'Cabinet 3 / Shelf 2', 'Cabinet 3 / Shelf 3', 'Cabinet 3 / Shelf 4', 'Cabinet 3 / Shelf 5', 'Cabinet 4 / Shelf 1', 'Cabinet 4 / Shelf 2', 'Cabinet 4 / Shelf 3', 'Cabinet 4 / Shelf 4',
                           'Cabinet 4 / Shelf 5', 'Cabinet 5 / Shelf 1', 'Cabinet 5 / Shelf 2', 'Cabinet 5 / Shelf 3', 'Cabinet 5 / Shelf 4', 'Cabinet 5 / Shelf 5', 'Cabinet 6 / Shelf 1', 'Cabinet 6 / Shelf 2', 'Cabinet 6 / Shelf 3', 'Cabinet 6 / Shelf 4', 'Cabinet 6 / Shelf 5', 'Cabinet 7 / Shelf 1', 'Cabinet 7 / Shelf 2', 'Cabinet 7 / Shelf 3', 'Cabinet 7 / Shelf 4', 'Cabinet 7 / Shelf 5', 'Cabinet 8 / Shelf 1', 'Cabinet 8 / Shelf 2', 'Cabinet 8 / Shelf 3', 'Cabinet 8 / Shelf 4', 'Cabinet 8 / Shelf 5', 'Cabinet 9 / Shelf 1', 'Cabinet 9 / Shelf 2', 'Cabinet 9 / Shelf 3', 'Cabinet 9 / Shelf 4', 'Cabinet 9 / Shelf 5', 'Cabinet 10 / Shelf 1', 'Cabinet 10 / Shelf 2', 'Cabinet 10 / Shelf 3', 'Cabinet 10 / Shelf 4', 'Cabinet 10 / Shelf 5', 'Cabinet 11 / Shelf 1', 'Cabinet 11 / Shelf 2', 'Cabinet 11 / Shelf 3', 'Cabinet 11 / Shelf 4', 'Cabinet 11 / Shelf 5', 'Open Shelf 1 / Shelf 1', 'Open Shelf 1 / Shelf 2', 'Open Shelf 1 / Shelf 3', 'Open Shelf 1 / Shelf 4', 'Open Shelf 2 / Shelf 1', 'Open Shelf 2 / Shelf 2', 'Open Shelf 2 / Shelf 3', 'Open Shelf 2 / Shelf 4', 'Open Shelf 2 / Shelf 5', 'Cart', 'THROWN OUT')
@@ -1987,9 +1999,9 @@ class EntryMenu(object):
             textvariable=self.text_date
         )
         self.lbl_date.place(
-            x=757,
+            x=665,
             y=503,
-            width=164,
+            width=256,
             height=40
         )
 
@@ -2062,15 +2074,6 @@ class EntryMenu(object):
             height=125
         )
 
-        self.canvas.create_text(
-            624.0,
-            509.0,
-            anchor="nw",
-            text="Date Edited",
-            fill="#000000",
-            font=("Roboto Bold", 24 * -1)
-        )
-
         self.canvas.create_rectangle(
             757.0,
             503.0,
@@ -2078,6 +2081,11 @@ class EntryMenu(object):
             543.0,
             fill="#C4C4C4",
             outline="")
+
+        # Set quantity and germ to 0 to avoid a Nonetype error when trying to add or
+        # subtract in the main window.
+        self.lbl_quantity.insert(END, 0)
+        self.lbl_germ.insert(END, 0)
 
         # Accept button
         self.button_image_1 = tk.PhotoImage(
@@ -2100,9 +2108,9 @@ class EntryMenu(object):
         )
 
     def current_date(self):
-        """ Display the current date. """
-        today = date.today()
-        dateformat = today.strftime('%m/%d/%Y')
+        """ Sets the edited date to current date. """
+        time = datetime.now()
+        dateformat = time.strftime("%Y-%m-%d %H:%M:%S")
         self.text_date.set(dateformat)
 
     def set_variety_id(self):
