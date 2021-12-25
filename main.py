@@ -1294,7 +1294,6 @@ class MainMenu(tk.Frame):
         source = seedarchivedb
 
         try:
-            barcode = self.text_barcode_hidden.get()
             f = filedialog.asksaveasfile(initialfile=f'{dateformat}.db',
                                          defaultextension=".db", filetypes=[("Database Files", "*.db")], initialdir=relative_to_backup("."))
             if f is None:
@@ -1304,18 +1303,22 @@ class MainMenu(tk.Frame):
 
                 messagebox.showinfo(title="File saved",
                                     message=f"{dateformat}.db has been saved")
-                print(barcode)
         except Error as e:
             messagebox.showerror(title="Save Error", message=e)
             pass
 
     def load_database(self):
         """ Load the saved database. """
+        today = date.today()
+        dateformat = today.strftime('%Y-%m-%d')
         try:
             source = filedialog.askopenfilename(title="Choose database file.")
             if source == "":
                 pass
             else:
+                shutil.copy(seedarchivedb, relative_to_backup(
+                    f"{dateformat}.db"))
+
                 dest = seedarchivedb
 
                 shutil.copy(source, dest)
