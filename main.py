@@ -5,32 +5,27 @@
 # imports
 from datetime import datetime
 from datetime import date
-from sqlite3.dbapi2 import Cursor, Error, version
+from sqlite3.dbapi2 import Error
 import tkinter as tk
-from tkinter import Button, IntVar, StringVar, messagebox
+from tkinter import messagebox
 from pathlib import Path
 import sqlite3 as sql
-from tkinter import font
-from tkinter.constants import BOTH, BOTTOM, CENTER, E, END, HIDDEN, HORIZONTAL, N, S, TOP, W
-from numpy.core.fromnumeric import sort
+from tkinter.constants import BOTH, BOTTOM, END, HORIZONTAL, TOP
 import pandas as pd
 from tkinter import ttk
 import sys
 import traceback
 import os
-from pandas.io.sql import to_sql
 from tkinter import filedialog
 import shutil
 
+# Global paths and variables
 
+APP_VERSION = "0.2.2"
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
 BACKUP_PATH = OUTPUT_PATH / Path("./backup")
-
-# * ###########################################################################
-program_version = "0.2.2"  # * UPDATE THIS EVERY VERSION!!!!
-# * ###########################################################################
 
 
 def relative_to_assets(path: str) -> Path:
@@ -1394,7 +1389,7 @@ class AboutPopup(object):
         self.master.bind('<Return>', self.close)
 
         self.lbl = tk.Label(
-            self.master, text=f"SeedArchive v{program_version}\n2021 Beard Industries")
+            self.master, text=f"SeedArchive v{APP_VERSION}\n2021 Beard Industries")
         self.lbl.place(relx=.5, rely=.3, anchor='center')
 
         self.btn = tk.Button(self.master, anchor='center',
