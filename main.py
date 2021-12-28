@@ -21,7 +21,7 @@ import shutil
 
 # Global paths and variables
 
-APP_VERSION = "0.2.2"
+APP_VERSION = "0.2.3"
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
