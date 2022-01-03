@@ -21,8 +21,13 @@ import shutil
 
 # Global paths and variables
 
-APP_VERSION = "0.2.3"
-OUTPUT_PATH = Path(__file__).parent
+if getattr(sys, 'frozen', False):
+    """ Check if we are running in bundled mode or not. """
+    OUTPUT_PATH = os.path.dirname(sys.executable)
+else:
+    OUTPUT_PATH = Path(__file__).parent
+
+APP_VERSION = "0.2.4"
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
 BACKUP_PATH = OUTPUT_PATH / Path("./backup")
@@ -42,6 +47,12 @@ def relative_to_backup(path: str) -> Path:
 
 # Global database variable
 seedarchivedb = relative_to_data("seedarchivedb.db")
+
+
+def create_version():
+    """ Create a version file on start. """
+    with open(relative_to_data("Version.txt"), "w") as f:
+        f.write(APP_VERSION)
 
 
 def create_connection(db_file):
@@ -2393,6 +2404,7 @@ class HistoryView(object):
 
 def main():
     """ Run the program. """
+    create_version()
     root = tk.Tk()
 
     w = 1024
