@@ -21,8 +21,10 @@ import shutil
 
 # Global paths and variables
 
+
 APP_VERSION = "0.2.3"
-OUTPUT_PATH = Path(__file__).parent
+# OUTPUT_PATH = Path(__file__).parent
+OUTPUT_PATH = os.path.dirname(sys.executable)
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
 BACKUP_PATH = OUTPUT_PATH / Path("./backup")
