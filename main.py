@@ -408,13 +408,13 @@ def version_check():
     url = "https://seedarchive-server.herokuapp.com/Version.txt"
 
     version_server = requests.get(url).content.decode()
-    with open("Version.txt") as f:
+    with open(relative_to_data("Version.txt")) as f:
         version_current = f.read()
 
-    if version_server != version_current:
-        print("start updater")
+    if version_server == version_current:
+        return True
     else:
-        pass
+        return False
 
 
 class MainMenu(tk.Frame):
@@ -2421,8 +2421,15 @@ class HistoryView(object):
 def main():
     """ Run the program. """
     create_version()
-    version_check()
     root = tk.Tk()
+
+    if version_check():
+        messagebox.showerror(
+            title="Update", message="SeedArchive needs an update")
+        root.destroy()
+        os.startfile("updater.exe")
+    else:
+        pass
 
     w = 1024
     h = 1024
