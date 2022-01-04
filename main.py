@@ -411,7 +411,7 @@ def version_check():
     with open(relative_to_data("Version.txt")) as f:
         version_current = f.read()
 
-    if version_server == version_current:
+    if version_server != version_current:
         return True
     else:
         return False
