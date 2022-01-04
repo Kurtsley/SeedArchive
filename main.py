@@ -28,7 +28,7 @@ if getattr(sys, 'frozen', False):
 else:
     OUTPUT_PATH = Path(__file__).parent
 
-APP_VERSION = "0.2.4"
+APP_VERSION = "0.2.5"
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 DATA_PATH = OUTPUT_PATH / Path("./data")
 BACKUP_PATH = OUTPUT_PATH / Path("./backup")
