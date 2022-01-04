@@ -412,9 +412,11 @@ def version_check():
         version_current = f.read()
 
     if version_server != version_current:
-        return True
+        messagebox.showerror(
+            title="Update", message="SeedArchive needs an update")
+        os.startfile(OUTPUT_PATH / Path("updater.exe"))
     else:
-        return False
+        pass
 
 
 class MainMenu(tk.Frame):
@@ -2423,14 +2425,6 @@ def main():
     create_version()
     root = tk.Tk()
 
-    if version_check():
-        messagebox.showerror(
-            title="Update", message="SeedArchive needs an update")
-        os.startfile("updater.exe")
-        root.destroy()
-    else:
-        pass
-
     w = 1024
     h = 1024
     sw = root.winfo_screenwidth()
@@ -2441,6 +2435,9 @@ def main():
 
     app = MainMenu(root)
     app.pack()
+
+    version_check()
+    root.after(1000, sys.exit())
 
     root.mainloop()
 
