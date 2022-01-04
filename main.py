@@ -2426,8 +2426,8 @@ def main():
     if version_check():
         messagebox.showerror(
             title="Update", message="SeedArchive needs an update")
-        root.destroy()
         os.startfile("updater.exe")
+        root.destroy()
     else:
         pass
 
