@@ -1402,10 +1402,6 @@ class MainMenuBar(tk.Menu):
         """ Exit program. """
         sys.exit(0)
 
-    def update_recent_menu():
-        """ Updates the recent menu. """
-        list = sql_recent_list()
-
 
 class AboutPopup(object):
     """ Version Popup. """
