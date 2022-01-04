@@ -1145,6 +1145,7 @@ class MainMenu(tk.Frame):
                 new = float(original) + value
                 update_quantity(new, barcode)
                 self.current_date()
+                self.text_quantity.set(float(self.show_results(6)))
 
         except Exception:
             pass
