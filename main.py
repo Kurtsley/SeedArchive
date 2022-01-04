@@ -18,6 +18,7 @@ import traceback
 import os
 from tkinter import filedialog
 import shutil
+import requests
 
 # Global paths and variables
 
@@ -400,6 +401,20 @@ def sql_all_todataframe():
 
     conn.close()
     return df
+
+
+def version_check():
+    """ Download the version file from the server and compare. """
+    url = "https://seedarchive-server.herokuapp.com/Version.txt"
+
+    version_server = requests.get(url).content.decode()
+    with open("Version.txt") as f:
+        version_current = f.read()
+
+    if version_server != version_current:
+        print("start updater")
+    else:
+        pass
 
 
 class MainMenu(tk.Frame):
@@ -827,7 +842,7 @@ class MainMenu(tk.Frame):
             fill="#868686",
             outline="")
 
-        # Menu Bar
+        # Creating an instance of the MainMenuBar class to update the recent menu
         menubar = MainMenuBar(master)
         master.config(menu=menubar)
 
@@ -1131,6 +1146,7 @@ class MainMenu(tk.Frame):
                 update_quantity(new, barcode)
                 self.current_date()
                 self.text_quantity.set(float(self.show_results(6)))
+
         except Exception:
             pass
 
@@ -2405,6 +2421,7 @@ class HistoryView(object):
 def main():
     """ Run the program. """
     create_version()
+    version_check()
     root = tk.Tk()
 
     w = 1024
