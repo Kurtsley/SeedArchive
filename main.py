@@ -1362,7 +1362,7 @@ class MainMenuBar(tk.Menu):
         filemenu = tk.Menu(self, tearoff=False)
         recentmenu = tk.Menu(self, tearoff=False)
 
-        list = sql_recent_list()
+        list = self.recent_list()
 
         self.barcode_vars = tk.StringVar()
 
@@ -1378,6 +1378,10 @@ class MainMenuBar(tk.Menu):
         filemenu.add_command(label="About", command=self.about)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.close)
+
+    def recent_list(object):
+        list = sql_recent_list()
+        return list
 
     def select_barcode(self):
         """ Select the barcode from the recent menu. """
@@ -2437,7 +2441,6 @@ def main():
     app.pack()
 
     version_check()
-    root.after(1000, sys.exit())
 
     root.mainloop()
 
