@@ -30,7 +30,7 @@ else:
 
 APP_VERSION = "0.2.5"
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
-DATA_PATH = OUTPUT_PATH / Path("./data")
+DATA_PATH = OUTPUT_PATH / Path(".")
 BACKUP_PATH = OUTPUT_PATH / Path("./backup")
 
 
