@@ -52,7 +52,7 @@ seedarchivedb = relative_to_data("seedarchivedb.db")
 
 def create_version():
     """ Create a version file on start. """
-    with open(relative_to_data("Version.txt"), "w") as f:
+    with open(relative_to_data("Version.txt", "w")) as f:
         f.write(APP_VERSION)
 
 
@@ -348,7 +348,7 @@ def sql_to_dataframe():
     sql_query = pd.read_sql_query(sql, conn)
 
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
-                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+                                          'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
 
     conn.close()
     return df
@@ -383,7 +383,7 @@ def sql_history_dataframe(barcode):
 
     df = pd.DataFrame(sql_query, columns=['Barcode ID', 'Variety ID', 'Variety', 'Crop', 'Source', 'Year (rcv)',
 
-                      'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
+                                          'Quantity (g)', 'Germ %', 'TKW (g)', 'Location', 'Designation / Project', 'Entrant', 'Notes', 'Date Edited'])
 
     conn.close()
     return df
@@ -397,7 +397,7 @@ def sql_all_todataframe():
     sql_query = pd.read_sql_query(sql, conn)
 
     df = pd.DataFrame(sql_query, columns=[
-                      'Barcode ID', 'Year (rcv)', 'Date Edited'])
+        'Barcode ID', 'Year (rcv)', 'Date Edited'])
 
     conn.close()
     return df
