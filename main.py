@@ -29,9 +29,9 @@ else:
     OUTPUT_PATH = Path(__file__).parent
 
 APP_VERSION = "0.2.5"
-ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+ASSETS_PATH = OUTPUT_PATH / Path("../assets")
 DATA_PATH = OUTPUT_PATH / Path(".")
-BACKUP_PATH = OUTPUT_PATH / Path("./backup")
+BACKUP_PATH = OUTPUT_PATH / Path("../backup")
 
 
 def relative_to_assets(path: str) -> Path:
