@@ -403,22 +403,6 @@ def sql_all_todataframe():
     return df
 
 
-def version_check():
-    """ Download the version file from the server and compare. """
-    url = "https://seedarchive-server.herokuapp.com/Version.txt"
-
-    version_server = requests.get(url).content.decode()
-    with open(relative_to_data("Version.txt")) as f:
-        version_current = f.read()
-
-    if version_server != version_current:
-        messagebox.showerror(
-            title="Update", message="SeedArchive needs an update")
-        os.startfile(OUTPUT_PATH / Path("updater.exe"))
-    else:
-        pass
-
-
 class MainMenu(tk.Frame):
     """ Find menu class. """
 
@@ -2439,8 +2423,6 @@ def main():
 
     app = MainMenu(root)
     app.pack()
-
-    version_check()
 
     root.mainloop()
 
