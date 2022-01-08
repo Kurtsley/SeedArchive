@@ -52,7 +52,7 @@ seedarchivedb = relative_to_data("seedarchivedb.db")
 
 def create_version():
     """ Create a version file on start. """
-    with open(relative_to_data("Version.txt", "w")) as f:
+    with open(relative_to_data("Version.txt"), "w") as f:
         f.write(APP_VERSION)
 
 
