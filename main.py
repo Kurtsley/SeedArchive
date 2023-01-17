@@ -2,23 +2,23 @@
 
 # Find menu class file.
 
+import os
+import shutil
+import sqlite3 as sql
+import sys
+import tkinter as tk
+import traceback
+from datetime import date
 # imports
 from datetime import datetime
-from datetime import date
-from sqlite3.dbapi2 import Error
-import tkinter as tk
-from tkinter import messagebox
 from pathlib import Path
-import sqlite3 as sql
-from tkinter.constants import BOTH, BOTTOM, END, HORIZONTAL, TOP
-import pandas as pd
-from tkinter import ttk
-import sys
-import traceback
-import os
+from sqlite3.dbapi2 import Error
 from tkinter import filedialog
-import shutil
-import requests
+from tkinter import messagebox
+from tkinter import ttk
+from tkinter.constants import BOTH, BOTTOM, END, HORIZONTAL, TOP
+
+import pandas as pd
 
 # Global paths and variables
 
@@ -70,6 +70,7 @@ def create_connection(db_file):
 
 def test_connection():
     """ Test the sqlite3 connection. """
+    global cursor2
     conn = None
 
     try:
